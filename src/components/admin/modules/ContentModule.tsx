@@ -28,7 +28,20 @@ export function ContentModule() {
   useEffect(() => {
     adminJson<{ settings: ContentSettings }>("/api/admin/content")
       .then((d) => setSettings(d.settings || {}))
-      .catch(() => {})
+      .catch(() => {
+        // Fallback: use static content settings when API is unreachable
+        setSettings({
+          id: "singleton",
+          collectionEnabled: true,
+          collectionBannerEnabled: true,
+          announcementEnabled: true,
+          announcementText:
+            "🎉 Free doorstep collection across Glasgow — book online today!",
+          ticketIdVisible: true,
+          customHeaderCode: "",
+          customFooterCode: "",
+        } as ContentSettings);
+      })
       .finally(() => setLoading(false));
   }, []);
 

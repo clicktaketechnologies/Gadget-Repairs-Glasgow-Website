@@ -31,7 +31,13 @@ export function CodeModule() {
   useEffect(() => {
     adminJson<{ settings: CodeSettings }>("/api/admin/code")
       .then((d) => setSettings(d.settings || {}))
-      .catch(() => {})
+      .catch(() => {
+        // Fallback: use empty code settings when API is unreachable
+        setSettings({
+          customHeaderCode: "",
+          customFooterCode: "",
+        });
+      })
       .finally(() => setLoading(false));
   }, []);
 

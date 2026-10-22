@@ -72,8 +72,27 @@ export function EmailModule() {
       ),
     ])
       .then(([s, e]) => {
-        if (s) setSettings(s.settings || {});
-        if (e) setEmails(e.emails || []);
+        // Fallback: use static email settings when API is unreachable
+        if (s) {
+          setSettings(s.settings || {});
+        } else {
+          setSettings({
+            id: "singleton",
+            enabled: false,
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false,
+            user: "",
+            password: "",
+            fromEmail: "info@gadgetrepairsglasgow.co.uk",
+            fromName: "Gadget Repairs Glasgow",
+          } as EmailSettings);
+        }
+        if (e) {
+          setEmails(e.emails || []);
+        } else {
+          setEmails([]);
+        }
       })
       .finally(() => setLoading(false));
   }, []);

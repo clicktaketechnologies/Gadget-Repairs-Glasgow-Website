@@ -45,6 +45,9 @@ export function PagesModule() {
       );
       setRows(d.rows || []);
     } catch {
+      // Fallback: show empty rows when API is unreachable
+      setRows([]);
+      setLoading(false);
     } finally {
       setLoading(false);
     }

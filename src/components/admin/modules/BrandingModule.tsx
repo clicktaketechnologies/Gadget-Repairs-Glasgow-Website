@@ -81,7 +81,59 @@ export function BrandingModule() {
           safeParse<string[]>(branding.targetAreasJson, [])
         );
       })
-      .catch(() => {})
+      .catch(() => {
+        // Fallback: use static branding data when API is unreachable
+        const fallback: Branding = {
+          id: "singleton",
+          businessName: "Gadget Repairs Glasgow",
+          tagline: "Professional Mobile Phone & Tablet Repair, Unlocking, and Accessories",
+          about: "Gadget Repairs Glasgow is a trusted repair shop at 172 Trongate in Glasgow city centre. For over 10 years we have been fixing mobile phones, MacBooks, laptops, tablets, game consoles, computers, smart watches and GHD straighteners for thousands of happy customers.",
+          logoUrl: "/logo.jpg",
+          faviconUrl: "/logo.jpg",
+          primaryColor: "#1b4f8e",
+          secondaryColor: "#f05a28",
+          phone: "+44 7777 200149",
+          whatsapp: "+44 7777 200149",
+          email: "info@gadgetrepairsglasgow.co.uk",
+          website: "https://www.gadgetrepairsglasgow.co.uk",
+          gmbProfile: "https://g.co/kgs/DKcPKfJ",
+          mapLink: "https://maps.google.com/?q=172+Trongate+Glasgow+G1+5EL",
+          mapEmbed: "https://www.google.com/maps?q=172+Trongate+Glasgow+G1+5EL&output=embed",
+          address: "172 Trongate, Glasgow G1 5EL, United Kingdom",
+          hoursJson: JSON.stringify({
+            Monday: "9:00 AM – 7:00 PM", Tuesday: "9:00 AM – 7:00 PM",
+            Wednesday: "9:00 AM – 7:00 PM", Thursday: "9:00 AM – 7:00 PM",
+            Friday: "9:00 AM – 7:00 PM", Saturday: "9:00 AM – 7:00 PM",
+            Sunday: "10:30 AM – 5:30 PM",
+          }),
+          socialsJson: JSON.stringify({
+            Facebook: "https://www.facebook.com/gadgetrepairglasgow",
+            Instagram: "https://www.instagram.com/gadgetrepairsglasgow/",
+            TikTok: "https://www.tiktok.com/@gadgetrepairsglasgow",
+            YouTube: "https://www.youtube.com/@Gadgetrepairsglassgow",
+            LinkedIn: "https://www.linkedin.com/company/gadgetrepairsglasgow/",
+          }),
+          targetAreasJson: JSON.stringify(["Trongate","Glasgow City Centre","Merchant City","Buchanan Street","Dennistoun","Gorbals"]),
+          rating: 4.9,
+          reviewCount: 150,
+          yearsExperience: 10,
+        };
+        setB(fallback);
+        setHours({
+          Monday: "9:00 AM – 7:00 PM", Tuesday: "9:00 AM – 7:00 PM",
+          Wednesday: "9:00 AM – 7:00 PM", Thursday: "9:00 AM – 7:00 PM",
+          Friday: "9:00 AM – 7:00 PM", Saturday: "9:00 AM – 7:00 PM",
+          Sunday: "10:30 AM – 5:30 PM",
+        });
+        setSocials({
+          Facebook: "https://www.facebook.com/gadgetrepairglasgow",
+          Instagram: "https://www.instagram.com/gadgetrepairsglasgow/",
+          TikTok: "https://www.tiktok.com/@gadgetrepairsglasgow",
+          YouTube: "https://www.youtube.com/@Gadgetrepairsglassgow",
+          LinkedIn: "https://www.linkedin.com/company/gadgetrepairsglasgow/",
+        });
+        setAreas(["Trongate","Glasgow City Centre","Merchant City","Buchanan Street","Dennistoun","Gorbals"]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
