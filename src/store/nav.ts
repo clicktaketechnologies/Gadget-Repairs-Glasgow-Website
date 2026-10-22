@@ -213,7 +213,7 @@ interface NavState {
   goPrivacy: () => void;
   goTerms: () => void;
   goSitemap: () => void;
-  goAdmin: () => void;
+  goAdmin: (page?: AdminPage) => void;
   goPublic: () => void;
 }
 
@@ -266,7 +266,11 @@ export const useNav = create<NavState>()(
       goPrivacy: () => get().navigate({ kind: "public", page: "privacy" }),
       goTerms: () => get().navigate({ kind: "public", page: "terms" }),
       goSitemap: () => get().navigate({ kind: "public", page: "sitemap" }),
-      goAdmin: () => get().navigate({ kind: "admin", page: "admin-login" }),
+      goAdmin: (page) => {
+        const token = get().adminToken;
+        const target: AdminPage = token ? (page ?? "admin-overview") : "admin-login";
+        get().navigate({ kind: "admin", page: target });
+      },
       goPublic: () => get().navigate({ kind: "public", page: "home" }),
     }),
     {
