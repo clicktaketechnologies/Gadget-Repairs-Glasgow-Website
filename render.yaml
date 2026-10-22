@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: gadget-repairs-glasgow
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://gadget-repairs-glasgow.web.app
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
