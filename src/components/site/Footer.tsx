@@ -102,7 +102,7 @@ export function Footer() {
             <img
               src={logoUrl}
               alt={`${businessName} logo`}
-              className="size-12 rounded-lg object-cover ring-1 ring-white/10 bg-white"
+              className="size-12 rounded-lg object-contain ring-1 ring-white/10 bg-white"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).src =
                   "https://placehold.co/80x80/1b4f8e/ffffff?text=GRG";

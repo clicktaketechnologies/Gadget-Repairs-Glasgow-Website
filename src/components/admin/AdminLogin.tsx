@@ -91,7 +91,7 @@ export function AdminLogin() {
             <img
               src="/logo.jpg"
               alt="Gadget Repairs Glasgow"
-              className="h-12 w-12 rounded-lg object-cover"
+              className="h-12 w-12 rounded-lg object-contain"
             />
           </div>
           <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>

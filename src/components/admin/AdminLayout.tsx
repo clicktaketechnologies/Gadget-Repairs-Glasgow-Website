@@ -107,7 +107,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <img
           src="/logo.jpg"
           alt="Gadget Repairs Glasgow"
-          className="h-10 w-10 rounded-lg object-cover ring-1 ring-white/20"
+          className="h-10 w-10 rounded-lg object-contain ring-1 ring-white/20"
         />
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold leading-tight">

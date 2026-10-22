@@ -108,7 +108,7 @@ export function Header() {
               <img
                 src={logoUrl}
                 alt={`${businessName} logo`}
-                className="size-10 rounded-lg object-cover ring-1 ring-blue-100 bg-white"
+                className="size-10 rounded-lg object-contain ring-1 ring-blue-100 bg-white"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src =
                     "https://placehold.co/80x80/1b4f8e/ffffff?text=GRG";
@@ -318,7 +318,7 @@ export function Header() {
                       <img
                         src={logoUrl}
                         alt={`${businessName} logo`}
-                        className="size-10 rounded-lg object-cover ring-1 ring-blue-100"
+                        className="size-10 rounded-lg object-contain ring-1 ring-blue-100"
                         onError={(e) => {
                           (e.currentTarget as HTMLImageElement).src =
                             "https://placehold.co/80x80/1b4f8e/ffffff?text=GRG";

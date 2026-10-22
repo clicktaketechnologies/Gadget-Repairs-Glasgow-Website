@@ -1,0 +1,40 @@
+{
+  "name": "Gadget Repairs Glasgow",
+  "short_name": "Gadget Repairs",
+  "description": "Professional repair shop in Glasgow for mobile phones, MacBooks, laptops, tablets, game consoles, computers, smart watches & GHD straighteners.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1b4f8e",
+  "categories": ["business", "shopping", "utilities"],
+  "lang": "en-GB",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Book a Repair",
+      "short_name": "Book",
+      "url": "/contact"
+    },
+    {
+      "name": "Track Your Repair",
+      "short_name": "Track",
+      "url": "/track"
+    },
+    {
+      "name": "Our Services",
+      "short_name": "Services",
+      "url": "/services"
+    }
+  ],
+  "prefer_related_applications": false
+}
