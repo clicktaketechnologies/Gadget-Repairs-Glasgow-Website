@@ -84,7 +84,7 @@ export function ServicesPage({ services }: ServicesPageProps) {
             </h1>
             <p className="text-blue-100 mt-2 max-w-2xl text-sm sm:text-base">
               From cracked iPhone screens to liquid-damaged MacBooks, we fix
-              every gadget. Transparent pricing, 12-month warranty, same-day
+              every gadget. Transparent pricing, 30-day warranty, fast
               service.
             </p>
             <div className="flex flex-wrap gap-3 mt-5">

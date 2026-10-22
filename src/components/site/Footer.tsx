@@ -72,7 +72,7 @@ export function Footer() {
               Got a broken device? Let's fix it today.
             </h3>
             <p className="text-zinc-400 text-sm mt-1">
-              Same-day repairs, 12-month warranty, free Glasgow collection.
+              Fast repairs, 30-day warranty, free Glasgow collection.
               Walk in or book online.
             </p>
           </div>

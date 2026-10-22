@@ -99,7 +99,7 @@ export function ServiceCard({ service }: { service: Service }) {
             <div className="rounded-lg bg-zinc-50 p-2">
               <p className="text-zinc-500">Turnaround</p>
               <p className="font-semibold text-zinc-700 text-sm">
-                {service.turnaround ?? "Same day"}
+                {service.turnaround ?? "Fast turnaround"}
               </p>
             </div>
           </div>
@@ -195,7 +195,7 @@ export function HomePage({ services }: HomePageProps) {
               <p className="text-blue-100 text-base sm:text-lg max-w-xl">
                 {branding?.tagline ??
                   "Professional Mobile Phone & Tablet Repair, Unlocking, and Accessories"}
-                . Same-day service, 12-month warranty, free doorstep collection
+                . Fast service, 30-day warranty, free doorstep collection
                 across Glasgow.
               </p>
 
@@ -469,7 +469,7 @@ export function HomePage({ services }: HomePageProps) {
               <ul className="space-y-2 text-blue-100 text-sm">
                 {[
                   "Free collection & delivery across Glasgow city centre",
-                  "Same-day or next-day turnaround",
+                  "Fast turnaround",
                   "Live tracking from booking to delivery",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
@@ -498,7 +498,7 @@ export function HomePage({ services }: HomePageProps) {
               {[
                 { icon: CalendarClock, title: "1. Book Online", desc: "Choose collection date & time" },
                 { icon: Truck, title: "2. We Collect", desc: "Free pickup at your door" },
-                { icon: Wrench, title: "3. We Repair", desc: "Same-day turnaround" },
+                { icon: Wrench, title: "3. We Repair", desc: "Fast turnaround" },
                 { icon: BadgeCheck, title: "4. We Deliver", desc: "Free return delivery" },
               ].map((s) => (
                 <div
@@ -668,7 +668,7 @@ export function HomePage({ services }: HomePageProps) {
           </h2>
           <p className="text-blue-100 mt-3 max-w-2xl mx-auto">
             Walk in today at 172 Trongate, Glasgow — or book online and get free
-            doorstep collection. Same-day service, 12-month warranty on every
+            doorstep collection. Fast service, 30-day warranty on every
             repair.
           </p>
           <div className="flex flex-wrap gap-3 justify-center mt-6">

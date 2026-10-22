@@ -276,7 +276,7 @@ export function BlogDetailPage({ slug }: BlogDetailPageProps) {
                   Need a repair in Glasgow?
                 </h3>
                 <p className="text-blue-100 text-sm">
-                  Same-day service, 12-month warranty, free doorstep collection.
+                  Fast service, 30-day warranty, free doorstep collection.
                   Walk in to 172 Trongate or book online.
                 </p>
                 <Button

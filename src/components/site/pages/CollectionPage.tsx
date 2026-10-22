@@ -43,12 +43,12 @@ export function CollectionPage() {
     {
       icon: Wrench,
       title: "3. Fast Repair",
-      desc: "We diagnose, repair and test your device — most repairs done same day.",
+      desc: "We diagnose, repair and test your device — most repairs done most cases same day.",
     },
     {
       icon: BadgeCheck,
       title: "4. Free Return Delivery",
-      desc: "We deliver your fixed device back to your door, with a 12-month warranty.",
+      desc: "We deliver your fixed device back to your door, with a 30-day warranty.",
     },
   ];
 
@@ -190,7 +190,7 @@ export function CollectionPage() {
             {
               icon: Wrench,
               title: "Same-Day Turnaround",
-              desc: "Most repairs done same day. We'll text you when your device is ready.",
+              desc: "Most repairs done most cases same day. We'll text you when your device is ready.",
             },
             {
               icon: BadgeCheck,

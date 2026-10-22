@@ -164,11 +164,11 @@ export function ServiceDetailPage({ slug, services }: ServiceDetailPageProps) {
                 </div>
                 <div className="flex items-center gap-2 text-sm text-zinc-600">
                   <Clock className="size-4 text-orange-500" />
-                  Turnaround: <strong className="text-zinc-900">{service.turnaround ?? "Same day"}</strong>
+                  Turnaround: <strong className="text-zinc-900">{service.turnaround ?? "Fast turnaround"}</strong>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-zinc-600">
                   <ShieldCheck className="size-4 text-orange-500" />
-                  12-month warranty
+                  30-day warranty
                 </div>
                 <div className="pt-2 space-y-2">
                   <Button
@@ -321,7 +321,7 @@ export function ServiceDetailPage({ slug, services }: ServiceDetailPageProps) {
         </Card>
         <p className="text-xs text-zinc-500 mt-3 text-center">
           Prices are indicative — we'll confirm a fixed quote before any work
-          starts. All repairs carry a 12-month warranty.
+          starts. All repairs carry a 30-day warranty.
         </p>
       </Section>
 

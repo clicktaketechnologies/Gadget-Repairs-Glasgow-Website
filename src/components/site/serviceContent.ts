@@ -122,9 +122,9 @@ export function iconFor(name: string): LucideIcon {
 const MOBILE_REPAIR: ServiceContent = {
   slug: "mobile-repair",
   tagline:
-    "Same-day mobile phone repair in Glasgow — iPhone, Samsung, Google Pixel and more.",
+    "Fast mobile phone repair in Glasgow — iPhone, Samsung, Google Pixel and more.",
   intro:
-    "From cracked iPhone screens to dead Samsung batteries, our technicians repair every brand of mobile phone — fast. Most repairs are completed the same day with a 12-month warranty on parts and labour. Walk in to our Trongate store or book a free collection across Glasgow.",
+    "From cracked iPhone screens to dead Samsung batteries, our technicians repair every brand of mobile phone — fast. Most repairs are completed the same day with a 30-day warranty on parts and labour. Walk in to our Trongate store or book a free collection across Glasgow.",
   commonIssues: [
     { icon: "Droplets", title: "Cracked Screen", desc: "Smashed front glass, unresponsive touch, dead pixels or LCD bleed." },
     { icon: "Battery", title: "Battery Drain", desc: "Won't hold charge, dies quickly, shuts off at 30%, swelling battery." },
@@ -153,19 +153,19 @@ const MOBILE_REPAIR: ServiceContent = {
   processSteps: [
     { step: 1, title: "Free Quote", desc: "Tell us your model and issue — get a fixed price quote in 60 seconds.", icon: "Search" },
     { step: 2, title: "Book or Walk In", desc: "Book online or visit us at 172 Trongate. Free collection available across Glasgow.", icon: "ShoppingBag" },
-    { step: 3, title: "Fast Repair", desc: "Most repairs done same day with genuine parts and trained technicians.", icon: "Wrench" },
-    { step: 4, title: "12-Month Warranty", desc: "Every repair backed by a 12-month warranty on parts and labour.", icon: "ShieldCheck" },
+    { step: 3, title: "Fast Repair", desc: "Most repairs done same day with quality parts and trained technicians.", icon: "Wrench" },
+    { step: 4, title: "30-Day Warranty", desc: "Every repair backed by a 30-day warranty on parts and labour.", icon: "ShieldCheck" },
   ],
   faq: [
     { q: "How long does a phone screen repair take?", a: "Most screen replacements are completed in 30–90 minutes depending on the model." },
-    { q: "Do you use genuine parts?", a: "We offer both genuine OEM parts and high-quality aftermarket parts — your choice, both with 12-month warranty." },
+    { q: "Do you use quality parts?", a: "We offer both quality OEM parts and high-quality aftermarket parts — your choice, both with 30-day warranty." },
     { q: "Will I lose my data?", a: "No. Screen and battery repairs don't touch your data. We always recommend backing up first just in case." },
     { q: "Can you unlock my phone to any network?", a: "Yes — we network-unlock iPhones and most Android phones to work on any UK or international SIM." },
-    { q: "Do you offer a warranty?", a: "Every repair is covered by a 12-month warranty on parts and labour, excluding accidental or liquid damage." },
+    { q: "Do you offer a warranty?", a: "Every repair is covered by a 30-day warranty on parts and labour, excluding accidental or liquid damage." },
   ],
   features: [
     { icon: "Clock", title: "Same-Day Service", desc: "Most repairs done while you wait — typically 30–90 minutes." },
-    { icon: "ShieldCheck", title: "12-Month Warranty", desc: "Parts and labour fully covered for a full year." },
+    { icon: "ShieldCheck", title: "30-Day Warranty", desc: "Parts and labour fully covered for a full year." },
     { icon: "Wallet", title: "Best Glasgow Prices", desc: "Honest, transparent pricing — no hidden fees, no surprises." },
     { icon: "Truck", title: "Free Collection", desc: "Doorstep collection and delivery across Glasgow, free of charge." },
   ],
@@ -176,7 +176,7 @@ const MACBOOK_REPAIR: ServiceContent = {
   tagline:
     "Apple-certified MacBook, MacBook Pro & MacBook Air repair in Glasgow.",
   intro:
-    "Our technicians specialise in MacBook repairs — from liquid-damaged logic boards to Retina screen replacements. We use genuine Apple parts where available and offer a 12-month warranty on all repairs. Free collection from anywhere in Glasgow.",
+    "Our technicians specialise in MacBook repairs — from liquid-damaged logic boards to Retina screen replacements. We use quality Apple parts where available and offer a 30-day warranty on all repairs. Free collection from anywhere in Glasgow.",
   commonIssues: [
     { icon: "Droplets", title: "Liquid Damage", desc: "Spilled tea, coffee or water — we diagnose and recover liquid-damaged logic boards." },
     { icon: "Laptop", title: "Cracked Retina Screen", desc: "Smashed glass, dead pixels, stairstep lines, or no backlight." },
@@ -205,20 +205,20 @@ const MACBOOK_REPAIR: ServiceContent = {
   processSteps: [
     { step: 1, title: "Free Diagnostics", desc: "Drop in or book a free collection. We run a full hardware diagnostics on your MacBook.", icon: "Search" },
     { step: 2, title: "Transparent Quote", desc: "You receive a fixed-price quote before any work starts. No surprises.", icon: "Wallet" },
-    { step: 3, title: "Expert Repair", desc: "Apple-trained technicians using genuine parts where available, completed in 1–3 days.", icon: "Wrench" },
-    { step: 4, title: "12-Month Warranty", desc: "All repairs backed by 12-month warranty — collected back to your door for free.", icon: "ShieldCheck" },
+    { step: 3, title: "Expert Repair", desc: "Apple-trained technicians using quality parts where available, completed in 1–3 days.", icon: "Wrench" },
+    { step: 4, title: "30-Day Warranty", desc: "All repairs backed by 30-day warranty — collected back to your door for free.", icon: "ShieldCheck" },
   ],
   faq: [
     { q: "Can you recover data from a dead MacBook?", a: "Yes. If your logic board is fried we can often recover data by removing the SSD or repairing the board itself." },
-    { q: "Are parts genuine Apple?", a: "We offer both genuine Apple parts and high-quality OEM-equivalent parts. Genuine parts cost more but carry the same 12-month warranty." },
+    { q: "Are parts quality Apple?", a: "We offer both quality Apple parts and high-quality OEM-equivalent parts. Quality parts cost more but carry the same 30-day warranty." },
     { q: "How long does a MacBook repair take?", a: "Most repairs take 1–3 working days. Logic board repairs can take 3–5 days." },
     { q: "Do I need to back up my data first?", a: "Always recommended. We never intentionally wipe data, but liquid-damaged boards sometimes need an OS reinstall." },
     { q: "Can you fix the butterfly keyboard?", a: "Yes — we replace the full top case assembly including battery on 2016–2019 MacBook Pro models." },
   ],
   features: [
-    { icon: "ShieldCheck", title: "12-Month Warranty", desc: "Full parts and labour warranty on every MacBook repair." },
+    { icon: "ShieldCheck", title: "30-Day Warranty", desc: "Full parts and labour warranty on every MacBook repair." },
     { icon: "Droplets", title: "Liquid Damage Pros", desc: "Component-level logic board repair — we save machines others write off." },
-    { icon: "BadgeCheck", title: "Genuine Apple Parts", desc: "OEM Apple parts available on request, with full traceability." },
+    { icon: "BadgeCheck", title: "Quality Apple Parts", desc: "OEM Apple parts available on request, with full traceability." },
     { icon: "Truck", title: "Free Glasgow Collection", desc: "Doorstep collection and delivery — no need to come to us." },
   ],
 };
@@ -259,18 +259,18 @@ const LAPTOP_REPAIR: ServiceContent = {
     { step: 1, title: "Drop Off / Collection", desc: "Bring your laptop to 172 Trongate or book a free collection anywhere in Glasgow.", icon: "PackageCheck" },
     { step: 2, title: "Full Diagnostics", desc: "We test hardware and software to identify the real cause — not just symptoms.", icon: "Search" },
     { step: 3, title: "Fast Repair", desc: "Most repairs completed in 1–2 days. We text you when it's ready.", icon: "Wrench" },
-    { step: 4, title: "Warranty & Return", desc: "12-month warranty on all parts. Free delivery back to your door.", icon: "ShieldCheck" },
+    { step: 4, title: "Warranty & Return", desc: "30-day warranty on all parts. Free delivery back to your door.", icon: "ShieldCheck" },
   ],
   faq: [
     { q: "Can you upgrade my slow laptop instead of buying new?", a: "Often yes. Adding an SSD and more RAM can make a 5-year-old laptop faster than a new budget model — for £100–£150." },
     { q: "Do you recover data from dead laptops?", a: "Yes. If the laptop is dead we can usually recover data from the hard drive to a USB stick or new laptop." },
-    { q: "How long does a screen replacement take?", a: "Most laptop screens are replaced same-day or next-day, depending on parts availability." },
+    { q: "How long does a screen replacement take?", a: "Most laptop screens are replaced fast turnaround or next-day, depending on parts availability." },
     { q: "Do you fix Microsoft Surface devices?", a: "Yes — we replace Surface Laptop and Surface Pro screens, batteries and SSDs." },
     { q: "Is my data safe?", a: "We never wipe data without permission. For OS reinstalls we always attempt a backup first." },
   ],
   features: [
     { icon: "HardDrive", title: "SSD & RAM Upgrades", desc: "Make an old laptop faster than new — fraction of the cost." },
-    { icon: "ShieldCheck", title: "12-Month Warranty", desc: "All parts and labour covered for a full year." },
+    { icon: "ShieldCheck", title: "30-Day Warranty", desc: "All parts and labour covered for a full year." },
     { icon: "Search", title: "Free Diagnostics", desc: "We test before we quote — no charge for telling you what's wrong." },
     { icon: "Truck", title: "Free Collection", desc: "Doorstep pickup and return across Glasgow." },
   ],
@@ -281,7 +281,7 @@ const GHD_REPAIR: ServiceContent = {
   tagline:
     "GHD hair straightener repair in Glasgow — Classic, Gold, Platinum, Curve & more.",
   intro:
-    "Don't bin your broken GHDs — most faults are fixable in under 2 hours. From dead heating elements to broken cables, our technicians repair every GHD model. With 12-month warranty and same-day service on most repairs.",
+    "Don't bin your broken GHDs — most faults are fixable in under 2 hours. From dead heating elements to broken cables, our technicians repair every GHD model. With 30-day warranty and fast service on most repairs.",
   commonIssues: [
     { icon: "Zap", title: "Won't Heat Up", desc: "Most common fault — usually a blown thermal fuse or dead heating element." },
     { icon: "Plug", title: "Broken Cable", desc: "Cable torn at the swivel, exposed wires, intermittent power." },
@@ -312,19 +312,19 @@ const GHD_REPAIR: ServiceContent = {
     { step: 1, title: "Drop Off", desc: "Bring your GHDs to 172 Trongate — no appointment needed.", icon: "PackageCheck" },
     { step: 2, title: "Free Test", desc: "We diagnose the fault in front of you and quote a fixed price.", icon: "Search" },
     { step: 3, title: "Quick Fix", desc: "Most GHD repairs done in 1–2 hours — same day, while you wait.", icon: "Wrench" },
-    { step: 4, title: "Tested & Warrantied", desc: "Tested under load, then covered by our 12-month warranty.", icon: "ShieldCheck" },
+    { step: 4, title: "Tested & Warrantied", desc: "Tested under load, then covered by our 30-day warranty.", icon: "ShieldCheck" },
   ],
   faq: [
     { q: "How long does a GHD repair take?", a: "Most GHD repairs are completed within 1–2 hours — you can wait in store or come back later." },
     { q: "Why won't my GHDs heat up?", a: "Almost always a blown thermal fuse. It's a £20 fix and we stock the parts." },
     { q: "Do you repair GHD Curve curlers?", a: "Yes — we fix GHD Curve, GHD Max, GHD Eclipse and the cordless GHD Unplugged." },
     { q: "Is my model worth repairing?", a: "Almost always yes. A new pair of GHDs costs £100–£179; most repairs are under £45." },
-    { q: "Do you offer a warranty?", a: "Yes — all GHD repairs come with a 12-month warranty on parts and labour." },
+    { q: "Do you offer a warranty?", a: "Yes — all GHD repairs come with a 30-day warranty on parts and labour." },
   ],
   features: [
     { icon: "Clock", title: "Same-Day Repair", desc: "Most GHDs fixed within 1–2 hours, while you wait." },
     { icon: "Wallet", title: "From £20", desc: "Thermal fuse replacement from just £20 — far cheaper than buying new." },
-    { icon: "ShieldCheck", title: "12-Month Warranty", desc: "All parts and labour fully covered for a year." },
+    { icon: "ShieldCheck", title: "30-Day Warranty", desc: "All parts and labour fully covered for a year." },
     { icon: "Gift", title: "All Models Serviced", desc: "Classic, Gold, Platinum, Curve, Max, Eclipse — we fix them all." },
   ],
 };
@@ -334,7 +334,7 @@ const TABLET_REPAIR: ServiceContent = {
   tagline:
     "iPad and tablet repair in Glasgow — Apple, Samsung, Surface, Lenovo & more.",
   intro:
-    "From shattered iPad screens to swollen batteries, our technicians repair every popular tablet — fast. We work on iPads, Samsung Galaxy Tabs, Microsoft Surface, Amazon Fire and Lenovo tablets, all with a 12-month warranty.",
+    "From shattered iPad screens to swollen batteries, our technicians repair every popular tablet — fast. We work on iPads, Samsung Galaxy Tabs, Microsoft Surface, Amazon Fire and Lenovo tablets, all with a 30-day warranty.",
   commonIssues: [
     { icon: "Droplets", title: "Cracked Screen", desc: "Smashed glass, dead touch, unresponsive digitiser, LCD bleed." },
     { icon: "Battery", title: "Battery Issues", desc: "Won't hold charge, dies quickly, swelling battery lifting screen." },
@@ -365,19 +365,19 @@ const TABLET_REPAIR: ServiceContent = {
     { step: 1, title: "Tell Us Your Model", desc: "Get a fixed-price quote in 60 seconds based on your tablet model.", icon: "Search" },
     { step: 2, title: "Drop In or Book Collection", desc: "Visit 172 Trongate or book a free Glasgow doorstep collection.", icon: "PackageCheck" },
     { step: 3, title: "Repair", desc: "Most tablet repairs done same day or next day.", icon: "Wrench" },
-    { step: 4, title: "Warranty & Return", desc: "12-month warranty on all parts. Free return delivery across Glasgow.", icon: "ShieldCheck" },
+    { step: 4, title: "Warranty & Return", desc: "30-day warranty on all parts. Free return delivery across Glasgow.", icon: "ShieldCheck" },
   ],
   faq: [
     { q: "Will you lose my data when fixing the screen?", a: "No. Screen replacements don't affect data. We always recommend a backup just in case." },
     { q: "Can you fix the Touch ID / home button?", a: "Yes — we can pair a new home button to your iPad using Apple's diagnostic tool. Original button is always preferred." },
     { q: "How long does an iPad screen repair take?", a: "Most iPad screen replacements are done same day — typically 1–3 hours." },
     { q: "Do you fix Microsoft Surface tablets?", a: "Yes — we replace Surface Pro screens and batteries. Surface Laptop too." },
-    { q: "Are parts genuine?", a: "We offer both genuine Apple/Samsung parts and high-quality aftermarket options — both with 12-month warranty." },
+    { q: "Are parts quality?", a: "We offer both quality Apple/Samsung parts and high-quality aftermarket options — both with 30-day warranty." },
   ],
   features: [
     { icon: "Clock", title: "Same-Day Service", desc: "Most tablet repairs done in 1–3 hours." },
-    { icon: "ShieldCheck", title: "12-Month Warranty", desc: "All parts and labour fully covered for a year." },
-    { icon: "BadgeCheck", title: "Genuine Parts", desc: "OEM Apple and Samsung parts available on request." },
+    { icon: "ShieldCheck", title: "30-Day Warranty", desc: "All parts and labour fully covered for a year." },
+    { icon: "BadgeCheck", title: "Quality Parts", desc: "OEM Apple and Samsung parts available on request." },
     { icon: "Truck", title: "Free Collection", desc: "Doorstep pickup and return across Glasgow." },
   ],
 };
@@ -387,7 +387,7 @@ const GAME_CONSOLE_REPAIR: ServiceContent = {
   tagline:
     "PS5, PS4, Xbox Series X/S, Xbox One & Nintendo Switch repair in Glasgow.",
   intro:
-    "No signal on your PS5? Xbox disc drive not reading? Switch joy-con drifting? Our technicians repair every popular game console — fast. We use OEM-quality parts and back every repair with a 12-month warranty.",
+    "No signal on your PS5? Xbox disc drive not reading? Switch joy-con drifting? Our technicians repair every popular game console — fast. We use OEM-quality parts and back every repair with a 30-day warranty.",
   commonIssues: [
     { icon: "Plug", title: "HDMI Port Broken", desc: "No signal, broken pins, loose port, black screen on TV." },
     { icon: "Disc", title: "Disc Drive Fault", desc: "Won't read discs, grinding noise, ejecting games, laser fault." },
@@ -418,17 +418,17 @@ const GAME_CONSOLE_REPAIR: ServiceContent = {
     { step: 1, title: "Bring It In", desc: "Drop your console at 172 Trongate or book a free collection across Glasgow.", icon: "PackageCheck" },
     { step: 2, title: "Free Diagnostics", desc: "We test the console and tell you exactly what's wrong before any work starts.", icon: "Search" },
     { step: 3, title: "Fast Repair", desc: "HDMI ports done same day, more complex repairs take 1–3 days.", icon: "Wrench" },
-    { step: 4, title: "Tested & Warrantied", desc: "Tested under load, then covered by our 12-month warranty.", icon: "ShieldCheck" },
+    { step: 4, title: "Tested & Warrantied", desc: "Tested under load, then covered by our 30-day warranty.", icon: "ShieldCheck" },
   ],
   faq: [
     { q: "Can you fix the PS5 HDMI port?", a: "Yes — we replace the HDMI port itself on the motherboard. Done same day in most cases." },
     { q: "How long does a console repair take?", a: "HDMI ports 1–2 days. Disc drives 1–3 days. Software issues often same day." },
-    { q: "Do you fix joy-con drift?", a: "Yes — we replace the analogue stick mechanism on both joy-cons for £35 the pair, with 12-month warranty." },
+    { q: "Do you fix joy-con drift?", a: "Yes — we replace the analogue stick mechanism on both joy-cons for £35 the pair, with 30-day warranty." },
     { q: "Is my game save data safe?", a: "Yes — console hardware repairs don't touch your hard drive or save data." },
-    { q: "What's the warranty on console repairs?", a: "All game console repairs carry a 12-month warranty on parts and labour." },
+    { q: "What's the warranty on console repairs?", a: "All game console repairs carry a 30-day warranty on parts and labour." },
   ],
   features: [
-    { icon: "ShieldCheck", title: "12-Month Warranty", desc: "All console repairs fully covered for a year." },
+    { icon: "ShieldCheck", title: "30-Day Warranty", desc: "All console repairs fully covered for a year." },
     { icon: "Clock", title: "Fast Turnaround", desc: "HDMI ports done same day, most repairs in 1–3 days." },
     { icon: "Gamepad", title: "Controller Drift Fixed", desc: "Joy-con drift repair from £35 a pair — permanently." },
     { icon: "Truck", title: "Free Collection", desc: "Doorstep pickup and return across Glasgow." },
@@ -440,7 +440,7 @@ const COMPUTER_REPAIR: ServiceContent = {
   tagline:
     "Desktop PC and iMac repair in Glasgow — upgrades, hardware, software & builds.",
   intro:
-    "From custom gaming PCs to aging office towers, our technicians repair and upgrade every kind of desktop computer. RAM and SSD upgrades, virus removal, power supply replacement, custom builds — all backed by 12-month warranty.",
+    "From custom gaming PCs to aging office towers, our technicians repair and upgrade every kind of desktop computer. RAM and SSD upgrades, virus removal, power supply replacement, custom builds — all backed by 30-day warranty.",
   commonIssues: [
     { icon: "Plug", title: "Power Supply Dead", desc: "Won't turn on, no fan spin, burning smell, random shutdowns." },
     { icon: "HardDrive", title: "Slow Performance", desc: "Boot slow, app launch slow — SSD upgrade makes it fly." },
@@ -471,7 +471,7 @@ const COMPUTER_REPAIR: ServiceContent = {
     { step: 1, title: "Free Diagnostics", desc: "Bring your PC in — we test hardware and tell you what's wrong, free.", icon: "Search" },
     { step: 2, title: "Fixed Quote", desc: "You get a transparent fixed-price quote before any work starts.", icon: "Wallet" },
     { step: 3, title: "Repair / Upgrade", desc: "We use quality components and complete most repairs in 1–3 days.", icon: "Wrench" },
-    { step: 4, title: "Tested & Warrantied", desc: "Stress-tested and covered by our 12-month warranty.", icon: "ShieldCheck" },
+    { step: 4, title: "Tested & Warrantied", desc: "Stress-tested and covered by our 30-day warranty.", icon: "ShieldCheck" },
   ],
   faq: [
     { q: "Can you build a custom gaming PC?", a: "Yes — bring your parts list (or we'll spec one for you) and we'll build, cable-manage and stress-test it for from £80." },
@@ -483,7 +483,7 @@ const COMPUTER_REPAIR: ServiceContent = {
   features: [
     { icon: "HardDrive", title: "SSD & RAM Upgrades", desc: "Make an old PC faster than new — for £100–£150." },
     { icon: "ShoppingBag", title: "Custom Builds", desc: "Design and build your dream gaming or workstation PC." },
-    { icon: "ShieldCheck", title: "12-Month Warranty", desc: "All parts and labour covered for a full year." },
+    { icon: "ShieldCheck", title: "30-Day Warranty", desc: "All parts and labour covered for a full year." },
     { icon: "Search", title: "Free Diagnostics", desc: "We test before we quote — no charge for telling you what's wrong." },
   ],
 };
@@ -493,7 +493,7 @@ const SMART_WATCH_REPAIR: ServiceContent = {
   tagline:
     "Apple Watch, Samsung Galaxy Watch, Fitbit & Garmin repair in Glasgow.",
   intro:
-    "Cracked your Apple Watch screen? Battery dying on your Fitbit? Our technicians repair every popular smart watch — fast. We replace screens, batteries, buttons and straps, all with a 12-month warranty.",
+    "Cracked your Apple Watch screen? Battery dying on your Fitbit? Our technicians repair every popular smart watch — fast. We replace screens, batteries, buttons and straps, all with a 30-day warranty.",
   commonIssues: [
     { icon: "Droplets", title: "Cracked Glass", desc: "Smashed screen, dead touch, broken OLED, chips on edge." },
     { icon: "Battery", title: "Battery Drain", desc: "Won't last the day, dies quickly, swollen battery." },
@@ -524,10 +524,10 @@ const SMART_WATCH_REPAIR: ServiceContent = {
     { step: 1, title: "Tell Us Your Model", desc: "Get a fixed-price quote based on your smart watch model.", icon: "Search" },
     { step: 2, title: "Drop In / Collection", desc: "Visit 172 Trongate or book a free Glasgow collection.", icon: "PackageCheck" },
     { step: 3, title: "Fast Repair", desc: "Most smart watch repairs done same day or next day.", icon: "Wrench" },
-    { step: 4, title: "Warranty & Return", desc: "12-month warranty on all parts. Free return delivery.", icon: "ShieldCheck" },
+    { step: 4, title: "Warranty & Return", desc: "30-day warranty on all parts. Free return delivery.", icon: "ShieldCheck" },
   ],
   faq: [
-    { q: "Can you replace the screen on an Apple Watch?", a: "Yes — we replace Apple Watch screens on every series from Series 3 to Series 9, all with 12-month warranty." },
+    { q: "Can you replace the screen on an Apple Watch?", a: "Yes — we replace Apple Watch screens on every series from Series 3 to Series 9, all with 30-day warranty." },
     { q: "Will replacing the screen break waterproofing?", a: "We reseal the watch with adhesive and pressure-test the seal. Water resistance is restored to original spec." },
     { q: "How long does a smart watch repair take?", a: "Most repairs done same day — typically 1–2 hours for screen or battery." },
     { q: "Do you fix Fitbit and Garmin too?", a: "Yes — we replace screens and batteries on Fitbit Versa, Sense, Charge, Inspire and most Garmin models." },
@@ -535,7 +535,7 @@ const SMART_WATCH_REPAIR: ServiceContent = {
   ],
   features: [
     { icon: "Clock", title: "Same-Day Service", desc: "Most smart watch repairs done within 1–2 hours." },
-    { icon: "ShieldCheck", title: "12-Month Warranty", desc: "All parts and labour fully covered for a year." },
+    { icon: "ShieldCheck", title: "30-Day Warranty", desc: "All parts and labour fully covered for a year." },
     { icon: "Droplets", title: "Waterproof Reseal", desc: "Pressure-tested seal after every screen replacement." },
     { icon: "Watch", title: "All Brands", desc: "Apple, Samsung, Fitbit, Garmin — we fix them all." },
   ],
@@ -558,7 +558,7 @@ export function getServiceContent(slug: string): ServiceContent {
       ...MOBILE_REPAIR,
       slug,
       tagline: "Professional repair service.",
-      intro: "We offer professional repair with 12-month warranty.",
+      intro: "We offer professional repair with 30-day warranty.",
     }
   );
 }
