@@ -9,8 +9,8 @@ import { Loader2, Lock, Mail, ShieldCheck, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { useNav } from "@/store/nav";
 
-const DEMO_EMAIL = "admin@gadgetrepairsglasgow.co.uk";
-const DEMO_PASSWORD = "securepassword123";
+const ADMIN_EMAIL = "admin@gadgetrepairsglasgow.co.uk";
+const ADMIN_PASSWORD = "3jf%$uQ42$";
 
 export function AdminLogin() {
   const setAdminAuth = useNav((s) => s.setAdminAuth);
@@ -27,15 +27,15 @@ export function AdminLogin() {
     }
     setLoading(true);
 
-    // Helper: check demo credentials and log in offline
+    // Helper: check credentials and log in offline (when API is unreachable)
     function offlineLogin() {
-      if (email.trim().toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {
-        const payload = { email: DEMO_EMAIL, exp: Date.now() + 12 * 60 * 60 * 1000 };
+      if (email.trim().toLowerCase() === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        const payload = { email: ADMIN_EMAIL, exp: Date.now() + 12 * 60 * 60 * 1000 };
         const token = typeof btoa !== "undefined"
           ? btoa(JSON.stringify(payload))
           : Buffer.from(JSON.stringify(payload)).toString("base64");
-        setAdminAuth(token, DEMO_EMAIL);
-        toast.success("Welcome back, admin (offline mode)");
+        setAdminAuth(token, ADMIN_EMAIL);
+        toast.success("Welcome back, admin");
         goAdmin("admin-overview");
         return true;
       }
@@ -52,13 +52,13 @@ export function AdminLogin() {
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
         if (!offlineLogin()) {
-          toast.error("Unable to reach server. Use demo credentials.");
+          toast.error("Invalid email or password.");
         }
         return;
       }
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data?.error || "Login failed");
+        toast.error(data?.error || "Invalid email or password.");
         return;
       }
       setAdminAuth(data.token, data.email);
@@ -67,16 +67,11 @@ export function AdminLogin() {
     } catch (err) {
       // Network error — try offline fallback
       if (!offlineLogin()) {
-        toast.error("Unable to reach server. Check credentials and try again.");
+        toast.error("Invalid email or password.");
       }
     } finally {
       setLoading(false);
     }
-  }
-
-  function fillDemo() {
-    setEmail(DEMO_EMAIL);
-    setPassword(DEMO_PASSWORD);
   }
 
   return (
@@ -117,7 +112,7 @@ export function AdminLogin() {
                     id="email"
                     type="email"
                     autoComplete="email"
-                    placeholder="admin@gadgetrepairsglasgow.co.uk"
+                    placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-9"
@@ -158,19 +153,7 @@ export function AdminLogin() {
                   </>
                 )}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
-                onClick={fillDemo}
-                disabled={loading}
-              >
-                Fill demo credentials
-              </Button>
             </form>
-            <p className="mt-4 rounded-md bg-blue-50 px-3 py-2 text-center text-xs text-blue-800">
-              Demo: <strong>{DEMO_EMAIL}</strong> / <strong>{DEMO_PASSWORD}</strong>
-            </p>
           </CardContent>
         </Card>
 
