@@ -43,7 +43,7 @@ export function CollectionPage() {
     {
       icon: Wrench,
       title: "3. Fast Repair",
-      desc: "We diagnose, repair and test your device — most repairs done most cases same day.",
+      desc: "We diagnose, repair and test your device — most repairs done most cases fast turnaround.",
     },
     {
       icon: BadgeCheck,
@@ -190,7 +190,7 @@ export function CollectionPage() {
             {
               icon: Wrench,
               title: "Same-Day Turnaround",
-              desc: "Most repairs done most cases same day. We'll text you when your device is ready.",
+              desc: "Most repairs done most cases fast turnaround. We'll text you when your device is ready.",
             },
             {
               icon: BadgeCheck,

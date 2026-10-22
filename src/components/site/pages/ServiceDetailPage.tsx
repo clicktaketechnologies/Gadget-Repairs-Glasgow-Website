@@ -403,7 +403,7 @@ export function ServiceDetailPage({ slug, services }: ServiceDetailPageProps) {
       <Section className="py-8">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { icon: ShieldCheck, label: "12-Month Warranty" },
+            { icon: ShieldCheck, label: "30-Day Warranty" },
             { icon: Wallet, label: "Best Glasgow Prices" },
             { icon: Truck, label: "Free Collection" },
             { icon: BadgeCheck, label: "10+ Years Trusted" },

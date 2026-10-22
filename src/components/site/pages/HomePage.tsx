@@ -248,7 +248,7 @@ export function HomePage({ services }: HomePageProps) {
               <div className="flex flex-wrap gap-4 pt-4 text-xs text-blue-200">
                 <span className="inline-flex items-center gap-1">
                   <ShieldCheck className="size-4 text-orange-400" />
-                  12-Month Warranty
+                  30-Day Warranty
                 </span>
                 <span className="inline-flex items-center gap-1">
                   <Clock className="size-4 text-orange-400" />
@@ -373,7 +373,7 @@ export function HomePage({ services }: HomePageProps) {
             },
             {
               icon: ShieldCheck,
-              title: "12-Month Warranty",
+              title: "30-Day Warranty",
               desc: "Parts & labour covered",
             },
             {

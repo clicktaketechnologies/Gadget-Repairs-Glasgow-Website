@@ -19,7 +19,7 @@ export const STATIC_SERVICES: StaticService[] = [
     name: "Mobile Repair Service",
     category: "Mobile Repair",
     description:
-      "Professional repair for all smartphones — cracked screens, battery replacement, charging port fixes, water damage recovery, and software issues. iPhone, Samsung, Google Pixel, Huawei, Xiaomi and all major brands. Same-day service with 12-month warranty.",
+      "Professional repair for all smartphones — cracked screens, battery replacement, charging port fixes, water damage recovery, and software issues. iPhone, Samsung, Google Pixel, Huawei, Xiaomi and all major brands. Fast service with 30-day warranty.",
     icon: "Smartphone",
     priceFrom: "£25",
     priceTo: "£250",
@@ -34,7 +34,7 @@ export const STATIC_SERVICES: StaticService[] = [
     name: "MacBook Repair Service",
     category: "MacBook Repair",
     description:
-      "Expert MacBook, MacBook Pro and MacBook Air repair — screen replacement, battery, keyboard, trackpad, logic board diagnostics, and liquid damage recovery. Genuine Apple parts available with 12-month warranty.",
+      "Expert MacBook, MacBook Pro and MacBook Air repair — screen replacement, battery, keyboard, trackpad, logic board diagnostics, and liquid damage recovery. Quality Apple parts available with 30-day warranty.",
     icon: "Laptop",
     priceFrom: "£60",
     priceTo: "£450",
@@ -222,7 +222,7 @@ export const STATIC_REVIEWS = [
     author: "Sarah McLean",
     rating: 5,
     comment:
-      "My Samsung battery was dying by lunchtime. Gadget Repairs swapped it the same day and now it lasts two days. Friendly staff and honest advice.",
+      "My Samsung battery was dying by lunchtime. Gadget Repairs swapped it the fast turnaround and now it lasts two days. Friendly staff and honest advice.",
     device: "Samsung Galaxy S22",
     source: "Google",
     approved: true,
@@ -233,7 +233,7 @@ export const STATIC_REVIEWS = [
     author: "David Wilson",
     rating: 5,
     comment:
-      "MacBook Pro keyboard was failing. These guys replaced it for half what Apple quoted. Genuine part, 12-month warranty.",
+      "MacBook Pro keyboard was failing. These guys replaced it for half what Apple quoted. Quality part, 30-day warranty.",
     device: "MacBook Pro 2019",
     source: "Google",
     approved: true,
@@ -277,7 +277,7 @@ export const STATIC_REVIEWS = [
     author: "Steven Reid",
     rating: 5,
     comment:
-      "Apple Watch screen cracked. Replaced same day, waterproofing tested. Reasonable price and friendly service.",
+      "Apple Watch screen cracked. Replaced fast turnaround, waterproofing tested. Reasonable price and friendly service.",
     device: "Apple Watch Series 8",
     source: "Instagram",
     approved: true,
