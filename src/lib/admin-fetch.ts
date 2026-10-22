@@ -52,7 +52,11 @@ export async function adminJson<T = any>(
   }
   if (!res.ok) {
     const msg = data?.error || data?.message || `Request failed (${res.status})`;
-    toast.error(msg);
+    // Don't show toast for 404 (API not available on Firebase static export)
+    // or 401 (handled above) — the calling module's .catch() will use fallback data
+    if (res.status !== 404 && res.status !== 401) {
+      toast.error(msg);
+    }
     throw new Error(msg);
   }
   return data as T;
