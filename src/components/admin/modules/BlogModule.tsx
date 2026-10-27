@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { adminJson } from "@/lib/admin-fetch";
 import { slugify, fmtDate } from "@/lib/utils2";
-import { Plus, Pencil, Trash2, Loader2, Save, Newspaper, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Save, Newspaper, Star, ImagePlus, Link2, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface BlogPost {
@@ -108,6 +108,61 @@ export function BlogModule() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const fileInputRef = useState<HTMLInputElement | null>(null);
+
+  function insertImageAtCursor(url: string) {
+    const textarea = document.getElementById("bp-content") as HTMLTextAreaElement;
+    if (!textarea) {
+      // Fallback: append to end
+      const mdImage = `\n\n![Image](${url})\n\n`;
+      setForm((f) => ({ ...f, content: f.content + mdImage }));
+      return;
+    }
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const before = form.content.substring(0, start);
+    const after = form.content.substring(end);
+    const mdImage = `\n\n![Image](${url})\n\n`;
+    const newContent = before + mdImage + after;
+    setForm({ ...form, content: newContent });
+    // Restore cursor position after the inserted image
+    setTimeout(() => {
+      textarea.focus();
+      const newPos = start + mdImage.length;
+      textarea.setSelectionRange(newPos, newPos);
+    }, 0);
+  }
+
+  function handleImageUrlSubmit() {
+    if (!imageUrl.trim()) {
+      toast.error("Please enter an image URL");
+      return;
+    }
+    insertImageAtCursor(imageUrl.trim());
+    toast.success("Image inserted");
+    setImageUrl("");
+    setImagePickerOpen(false);
+  }
+
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image too large (max 2MB for inline). Use a URL for larger images.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      insertImageAtCursor(base64);
+      toast.success("Image inserted");
+      setImagePickerOpen(false);
+    };
+    reader.onerror = () => toast.error("Failed to read image");
+    reader.readAsDataURL(file);
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -435,15 +490,102 @@ export function BlogModule() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="bp-content">Content (Markdown)</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="bp-content">Content (Markdown)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={() => setImagePickerOpen(!imagePickerOpen)}
+                >
+                  <ImagePlus className="h-3.5 w-3.5" />
+                  Insert Image
+                </Button>
+              </div>
+              {imagePickerOpen && (
+                <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-blue-900">Insert Image Anywhere in Content</p>
+                    <button
+                      type="button"
+                      onClick={() => setImagePickerOpen(false)}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Click in the content area where you want the image, then choose an option below:
+                  </p>
+                  {/* Option 1: Upload from device */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-slate-700">Upload from device (max 2MB)</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={fileInputRef as any}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => (fileInputRef[0] as any)?.click()}
+                      >
+                        <ImagePlus className="h-3.5 w-3.5" />
+                        Choose Image
+                      </Button>
+                      <span className="text-[11px] text-slate-400">JPG, PNG, GIF, WebP</span>
+                    </div>
+                  </div>
+                  {/* Divider */}
+                  <div className="flex items-center gap-2 py-1">
+                    <div className="h-px flex-1 bg-slate-200" />
+                    <span className="text-[10px] uppercase text-slate-400">or</span>
+                    <div className="h-px flex-1 bg-slate-200" />
+                  </div>
+                  {/* Option 2: Paste URL */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-slate-700">Paste image URL</Label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Link2 className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                        <Input
+                          type="url"
+                          value={imageUrl}
+                          onChange={(e) => setImageUrl(e.target.value)}
+                          placeholder="https://example.com/image.jpg"
+                          className="h-8 pl-8 text-xs"
+                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleImageUrlSubmit(); } }}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-8 gap-1.5 bg-blue-900 hover:bg-blue-800"
+                        onClick={handleImageUrlSubmit}
+                      >
+                        Insert
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
               <Textarea
                 id="bp-content"
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
-                placeholder="# Heading&#10;&#10;Write your post content in markdown..."
-                rows={8}
+                placeholder={"# Heading\n\nWrite your post content in markdown...\n\n![Image](https://example.com/photo.jpg)\n\nMore text here..."}
+                rows={10}
                 className="font-mono text-sm"
               />
+              <p className="text-[11px] text-slate-400">
+                Tip: Use <code className="rounded bg-slate-100 px-1">![Alt text](URL)</code> to add images anywhere in the content. Click "Insert Image" above for a visual picker.
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

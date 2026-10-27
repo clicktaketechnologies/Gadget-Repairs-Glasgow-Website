@@ -205,7 +205,21 @@ export function BlogDetailPage({ slug }: BlogDetailPageProps) {
         <div className="grid lg:grid-cols-3 gap-8">
           <article className="lg:col-span-2 min-w-0">
             <div className="prose prose-zinc max-w-none prose-headings:text-blue-900 prose-headings:font-bold prose-a:text-blue-700 prose-strong:text-zinc-900 prose-li:text-zinc-700 prose-sm sm:prose-base">
-              <ReactMarkdown>{post.content}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  img: ({ src, alt, ...props }) => (
+                    <img
+                      src={typeof src === "string" ? src : ""}
+                      alt={alt || "Blog image"}
+                      className="rounded-xl my-4 max-w-full h-auto"
+                      loading="lazy"
+                      {...props}
+                    />
+                  ),
+                }}
+              >
+                {post.content}
+              </ReactMarkdown>
             </div>
 
             {tags.length > 0 && (
