@@ -13,6 +13,7 @@ import {
   Star,
   Newspaper,
   FileText,
+  Photo,
   Settings2,
   Palette,
   Mail,
@@ -44,6 +45,7 @@ const NAV_GROUPS: NavGroup[] = [
       { page: "admin-reviews", label: "Reviews", icon: Star },
       { page: "admin-blog", label: "Blog", icon: Newspaper },
       { page: "admin-pages", label: "Pages Editor", icon: FileText },
+      { page: "admin-media", label: "Media Library", icon: Photo },
     ],
   },
   {
@@ -66,6 +68,7 @@ const PAGE_TITLES: Record<AdminPage, string> = {
   "admin-reviews": "Reviews",
   "admin-blog": "Blog Posts",
   "admin-pages": "Pages Editor",
+  "admin-media": "Media Library",
   "admin-content": "Content Settings",
   "admin-branding": "Branding",
   "admin-email": "Email Settings",

@@ -10,6 +10,7 @@ import { ServicesModule } from "./modules/ServicesModule";
 import { ReviewsModule } from "./modules/ReviewsModule";
 import { BlogModule } from "./modules/BlogModule";
 import { PagesModule } from "./modules/PagesModule";
+import { MediaModule } from "./modules/MediaModule";
 import { ContentModule } from "./modules/ContentModule";
 import { BrandingModule } from "./modules/BrandingModule";
 import { EmailModule } from "./modules/EmailModule";
@@ -48,6 +49,9 @@ export function AdminApp() {
       break;
     case "admin-pages":
       content = <PagesModule />;
+      break;
+    case "admin-media":
+      content = <MediaModule />;
       break;
     case "admin-content":
       content = <ContentModule />;

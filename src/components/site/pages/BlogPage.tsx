@@ -35,14 +35,56 @@ export function BlogPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // First: load any locally-created posts from admin (localStorage)
+    let localPosts: Post[] = [];
+    try {
+      const raw = localStorage.getItem("grg-admin-blog");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          // Only show published posts (or scheduled posts whose time has passed)
+          localPosts = parsed.filter((p: any) => {
+            if (!p.published) return false;
+            // If scheduled for the future, don't show yet
+            if (p.scheduledAt && new Date(p.scheduledAt) > new Date()) return false;
+            return true;
+          });
+        }
+      }
+    } catch {}
+
+    // Then: try the API for live data
     fetch("/api/public/blog", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data && Array.isArray(data.posts) && data.posts.length) {
-          setPosts(data.posts as Post[]);
+          // Merge API posts with local posts (local take priority for same slug)
+          const apiSlugs = new Set(data.posts.map((p: Post) => p.slug));
+          const merged = [
+            ...localPosts.filter((p) => !apiSlugs.has(p.slug)),
+            ...data.posts,
+          ];
+          setPosts(merged as Post[]);
+        } else if (localPosts.length > 0) {
+          // No API data — use local posts merged with static fallback
+          const staticSlugs = new Set(STATIC_POSTS.map((p) => p.slug));
+          const merged = [
+            ...localPosts,
+            ...(STATIC_POSTS as Post[]).filter((p) => !localPosts.some((lp) => lp.slug === p.slug)),
+          ];
+          setPosts(merged);
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        // API failed — merge local posts with static fallback
+        if (localPosts.length > 0) {
+          const merged = [
+            ...localPosts,
+            ...(STATIC_POSTS as Post[]).filter((p) => !localPosts.some((lp) => lp.slug === p.slug)),
+          ];
+          setPosts(merged);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 

@@ -50,13 +50,46 @@ export function BlogDetailPage({ slug }: BlogDetailPageProps) {
   const goContact = useNav((s) => s.goContact);
   const goBlog = useNav((s) => s.goBlog);
 
-  const [post, setPost] = useState<Post | undefined>(() =>
-    (STATIC_POSTS as Post[]).find((p) => p.slug === slug)
-  );
+  const [post, setPost] = useState<Post | undefined>(() => {
+    // Check localStorage first (admin-created posts)
+    try {
+      const raw = localStorage.getItem("grg-admin-blog");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const local = parsed.find((p: any) => p.slug === slug && p.published);
+          if (local) return local as Post;
+        }
+      }
+    } catch {}
+    return (STATIC_POSTS as Post[]).find((p) => p.slug === slug);
+  });
   const [related, setRelated] = useState<Post[]>([]);
   const [loading, setLoading] = useState(!post);
 
   useEffect(() => {
+    // Check localStorage first (admin-created posts)
+    try {
+      const raw = localStorage.getItem("grg-admin-blog");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const local = parsed.find((p: any) => p.slug === slug && p.published);
+          if (local) {
+            setPost(local as Post);
+            const localRelated = parsed
+              .filter((p: any) => p.slug !== slug && p.published && p.category === local.category)
+              .slice(0, 3);
+            if (localRelated.length > 0) {
+              setRelated(localRelated as Post[]);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+      }
+    } catch {}
+
     fetch(`/api/public/blog/${slug}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {

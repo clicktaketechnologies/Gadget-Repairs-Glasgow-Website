@@ -31,6 +31,7 @@ export type AdminPage =
   | "admin-branding"
   | "admin-blog"
   | "admin-pages"
+  | "admin-media"
   | "admin-email"
   | "admin-code"
   | "admin-settings";
@@ -94,6 +95,7 @@ export function pathToRoute(pathname: string): Route {
       "admin-branding",
       "admin-blog",
       "admin-pages",
+      "admin-media",
       "admin-email",
       "admin-code",
       "admin-settings",
