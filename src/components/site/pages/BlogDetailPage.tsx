@@ -68,6 +68,7 @@ export function BlogDetailPage({ slug }: BlogDetailPageProps) {
   const [loading, setLoading] = useState(!post);
 
   useEffect(() => {
+    let cancelled = false;
     // Check localStorage first (admin-created posts)
     try {
       const raw = localStorage.getItem("grg-admin-blog");
@@ -75,16 +76,21 @@ export function BlogDetailPage({ slug }: BlogDetailPageProps) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
           const local = parsed.find((p: any) => p.slug === slug && p.published);
-          if (local) {
-            setPost(local as Post);
+          if (local && !cancelled) {
             const localRelated = parsed
               .filter((p: any) => p.slug !== slug && p.published && p.category === local.category)
               .slice(0, 3);
-            if (localRelated.length > 0) {
-              setRelated(localRelated as Post[]);
-              setLoading(false);
-              return;
-            }
+            // Use a microtask to avoid synchronous setState in effect
+            Promise.resolve().then(() => {
+              if (!cancelled) {
+                setPost(local as Post);
+                if (localRelated.length > 0) {
+                  setRelated(localRelated as Post[]);
+                }
+                setLoading(false);
+              }
+            });
+            return () => { cancelled = true; };
           }
         }
       }
@@ -93,13 +99,14 @@ export function BlogDetailPage({ slug }: BlogDetailPageProps) {
     fetch(`/api/public/blog/${slug}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data && data.post) {
+        if (!cancelled && data && data.post) {
           setPost(data.post as Post);
           setRelated((data.related ?? []) as Post[]);
         }
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [slug]);
 
   if (!post && loading) {

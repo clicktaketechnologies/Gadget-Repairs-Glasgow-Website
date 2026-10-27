@@ -13,7 +13,7 @@ import {
   Star,
   Newspaper,
   FileText,
-  Photo,
+  Images,
   Settings2,
   Palette,
   Mail,
@@ -45,7 +45,7 @@ const NAV_GROUPS: NavGroup[] = [
       { page: "admin-reviews", label: "Reviews", icon: Star },
       { page: "admin-blog", label: "Blog", icon: Newspaper },
       { page: "admin-pages", label: "Pages Editor", icon: FileText },
-      { page: "admin-media", label: "Media Library", icon: Photo },
+      { page: "admin-media", label: "Media Library", icon: Images },
     ],
   },
   {
