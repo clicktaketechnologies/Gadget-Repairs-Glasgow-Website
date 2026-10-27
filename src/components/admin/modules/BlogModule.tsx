@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { adminJson } from "@/lib/admin-fetch";
 import { slugify, fmtDate } from "@/lib/utils2";
-import { Plus, Pencil, Trash2, Loader2, Save, Newspaper, Star, ImagePlus, Link2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Save, Newspaper, Star, ImagePlus, Link2, X, Clock, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 
 interface BlogPost {
@@ -54,6 +54,7 @@ interface BlogPost {
   featured: boolean;
   createdAt: string;
   updatedAt: string;
+  scheduledAt?: string | null;
 }
 
 const EMPTY = {
@@ -67,15 +68,16 @@ const EMPTY = {
   author: "Gadget Repairs Glasgow",
   published: false,
   featured: false,
+  scheduledAt: "",
 };
 
 const STORAGE_KEY = "grg-admin-blog";
 
 const FALLBACK_POSTS: BlogPost[] = [
-  { id: "p1", slug: "cracked-iphone-screen-glasgow-guide", title: "Cracked iPhone Screen in Glasgow? Complete Repair Guide", excerpt: "Everything you need to know about iPhone screen repair in Glasgow.", content: "# Cracked iPhone Screen\n\nCosts, turnaround times, and warranty info.", coverImage: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=800&q=80", category: "Mobile Repair", tags: "iPhone,screen repair", author: "Gadget Repairs Glasgow", published: true, featured: true, createdAt: "2025-10-20T10:00:00Z", updatedAt: "2025-10-20T10:00:00Z" },
-  { id: "p2", slug: "macbook-repair-glasgow-guide", title: "MacBook Repair in Glasgow: Costs & What to Expect", excerpt: "MacBook not turning on? Here's everything Glasgow MacBook owners need to know.", content: "# MacBook Repair\n\nCommon issues and costs.", coverImage: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80", category: "MacBook Repair", tags: "MacBook,repair", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-19T10:00:00Z", updatedAt: "2025-10-19T10:00:00Z" },
-  { id: "p3", slug: "ghd-straightener-repair-guide", title: "GHD Won't Heat? Common Faults & Repair Costs", excerpt: "GHD stopped working? Here's what's wrong and how much it costs to fix.", content: "# GHD Repair Guide\n\nCommon faults and costs.", coverImage: "https://images.unsplash.com/photo-1522335789203-aaa9cbb96e9d?w=800&q=80", category: "GHD Repair", tags: "GHD,straightener", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-18T10:00:00Z", updatedAt: "2025-10-18T10:00:00Z" },
-  { id: "p4", slug: "ps5-xbox-hdmi-port-repair", title: "PS5/Xbox HDMI Port Broken? Console Repair Guide", excerpt: "No signal on your PS5 or Xbox? Here's how much console repair costs.", content: "# Console HDMI Repair\n\nCommon issues and costs.", coverImage: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80", category: "Game Console Repair", tags: "PS5,Xbox,HDMI", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-17T10:00:00Z", updatedAt: "2025-10-17T10:00:00Z" },
+  { id: "p1", slug: "cracked-iphone-screen-glasgow-guide", title: "Cracked iPhone Screen in Glasgow? Complete Repair Guide", excerpt: "Everything you need to know about iPhone screen repair in Glasgow.", content: "# Cracked iPhone Screen\n\nCosts, turnaround times, and warranty info.", coverImage: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=800&q=80", category: "Mobile Repair", tags: "iPhone,screen repair", author: "Gadget Repairs Glasgow", published: true, featured: true, createdAt: "2025-10-20T10:00:00Z", updatedAt: "2025-10-20T10:00:00Z", scheduledAt: null },
+  { id: "p2", slug: "macbook-repair-glasgow-guide", title: "MacBook Repair in Glasgow: Costs & What to Expect", excerpt: "MacBook not turning on? Here's everything Glasgow MacBook owners need to know.", content: "# MacBook Repair\n\nCommon issues and costs.", coverImage: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80", category: "MacBook Repair", tags: "MacBook,repair", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-19T10:00:00Z", updatedAt: "2025-10-19T10:00:00Z", scheduledAt: null },
+  { id: "p3", slug: "ghd-straightener-repair-guide", title: "GHD Won't Heat? Common Faults & Repair Costs", excerpt: "GHD stopped working? Here's what's wrong and how much it costs to fix.", content: "# GHD Repair Guide\n\nCommon faults and costs.", coverImage: "https://images.unsplash.com/photo-1522335789203-aaa9cbb96e9d?w=800&q=80", category: "GHD Repair", tags: "GHD,straightener", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-18T10:00:00Z", updatedAt: "2025-10-18T10:00:00Z", scheduledAt: null },
+  { id: "p4", slug: "ps5-xbox-hdmi-port-repair", title: "PS5/Xbox HDMI Port Broken? Console Repair Guide", excerpt: "No signal on your PS5 or Xbox? Here's how much console repair costs.", content: "# Console HDMI Repair\n\nCommon issues and costs.", coverImage: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80", category: "Game Console Repair", tags: "PS5,Xbox,HDMI", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-17T10:00:00Z", updatedAt: "2025-10-17T10:00:00Z", scheduledAt: null },
 ];
 
 function loadFromStorage(): BlogPost[] | null {
@@ -214,6 +216,7 @@ export function BlogModule() {
       author: p.author,
       published: p.published,
       featured: p.featured,
+      scheduledAt: p.scheduledAt ? p.scheduledAt.slice(0, 16) : "",
     });
     setEditing(p);
     setCreating(true);
@@ -254,6 +257,7 @@ export function BlogModule() {
           ...form,
           slug,
           updatedAt: now,
+          scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
         };
         setPosts((prev) => {
           const next = prev.map((p) => (p.id === editing.id ? updated : p));
@@ -276,6 +280,7 @@ export function BlogModule() {
           featured: form.featured,
           createdAt: now,
           updatedAt: now,
+          scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
         };
         setPosts((prev) => {
           const next = [newPost, ...prev];
@@ -342,7 +347,8 @@ export function BlogModule() {
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-600">
           {posts.length} blog posts ·{" "}
-          {posts.filter((p) => p.published).length} published
+          {posts.filter((p) => p.published).length} published ·{" "}
+          {posts.filter((p) => p.scheduledAt).length} scheduled
         </p>
         <Button onClick={openCreate} className="gap-2 bg-blue-900 hover:bg-blue-800">
           <Plus className="h-4 w-4" />
@@ -372,6 +378,7 @@ export function BlogModule() {
                 <TableHead className="hidden sm:table-cell">Category</TableHead>
                 <TableHead className="text-center">Published</TableHead>
                 <TableHead className="text-center">Featured</TableHead>
+                <TableHead className="hidden lg:table-cell">Scheduled</TableHead>
                 <TableHead className="hidden md:table-cell">Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -410,6 +417,23 @@ export function BlogModule() {
                       checked={p.featured}
                       onCheckedChange={(v) => patchField(p, "featured", v)}
                     />
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell text-xs">
+                    {p.scheduledAt ? (
+                      <div className="flex items-center gap-1.5">
+                        <CalendarClock className="h-3.5 w-3.5 text-orange-500" />
+                        <div>
+                          <div className="font-medium text-orange-700">
+                            {new Date(p.scheduledAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                          </div>
+                          <div className="text-slate-400">
+                            {new Date(p.scheduledAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-xs text-slate-500">
                     {fmtDate(p.createdAt)}
@@ -624,6 +648,46 @@ export function BlogModule() {
                 />
                 <Label htmlFor="bp-featured">Featured</Label>
               </div>
+            </div>
+            {/* Schedule post */}
+            <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-blue-600" />
+                <Label htmlFor="bp-scheduled" className="text-sm font-semibold text-blue-900">
+                  Schedule Post
+                </Label>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Select a date and time to automatically publish this post. Leave empty to publish immediately (when Published toggle is on).
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="bp-scheduled"
+                  type="datetime-local"
+                  value={form.scheduledAt}
+                  onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })}
+                  className="max-w-xs"
+                />
+                {form.scheduledAt && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => setForm({ ...form, scheduledAt: "" })}
+                  >
+                    <X className="h-3 w-3" /> Clear
+                  </Button>
+                )}
+              </div>
+              {form.scheduledAt && (
+                <p className="text-[11px] font-medium text-blue-700">
+                  Will publish on: {new Date(form.scheduledAt).toLocaleString("en-GB", {
+                    weekday: "long", day: "numeric", month: "long", year: "numeric",
+                    hour: "2-digit", minute: "2-digit"
+                  })}
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
