@@ -1,0 +1,700 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useState } from "react";
+     4→import { useNav } from "@/store/nav";
+     5→import { motion } from "framer-motion";
+     6→import {
+     7→  Phone,
+     8→  ShieldCheck,
+     9→  Clock,
+    10→  Truck,
+    11→  Star,
+    12→  ArrowRight,
+    13→  CalendarClock,
+    14→  MapPin,
+    15→  ChevronRight,
+    16→  Wrench,
+    17→  Zap,
+    18→  BadgeCheck,
+    19→} from "lucide-react";
+    20→import { Button } from "@/components/ui/button";
+    21→import { Card, CardContent } from "@/components/ui/card";
+    22→import { Badge } from "@/components/ui/badge";
+    23→import { NavLink } from "@/components/site/NavLink";
+    24→import { Section } from "@/components/site/Section";
+    25→import { ServiceIcon, serviceIconBg } from "@/components/site/ServiceIcon";
+    26→import { StarRating } from "@/components/site/StarRating";
+    27→import { STATIC_SERVICES, STATIC_REVIEWS, STATIC_POSTS } from "../staticData";
+    28→import { telDigits } from "../lib";
+    29→import { cn } from "@/lib/utils";
+    30→
+    31→interface Service {
+    32→  id: string;
+    33→  slug: string;
+    34→  name: string;
+    35→  category: string;
+    36→  description: string;
+    37→  icon: string;
+    38→  priceFrom: string | null;
+    39→  priceTo: string | null;
+    40→  turnaround: string | null;
+    41→  popular: boolean;
+    42→  active: boolean;
+    43→  sortOrder: number;
+    44→}
+    45→
+    46→export function ServiceCard({ service }: { service: Service }) {
+    47→  const goServiceDetail = useNav((s) => s.goServiceDetail);
+    48→  const goContact = useNav((s) => s.goContact);
+    49→  const branding = useNav((s) => s.branding);
+    50→  const phone = branding?.phone ?? "+44 7777 200149";
+    51→
+    52→  return (
+    53→    <motion.div
+    54→      initial={{ opacity: 0, y: 12 }}
+    55→      whileInView={{ opacity: 1, y: 0 }}
+    56→      viewport={{ once: true, margin: "-40px" }}
+    57→      transition={{ duration: 0.35 }}
+    58→    >
+    59→      <Card className="group h-full overflow-hidden hover:shadow-xl transition-shadow border-zinc-200 hover:border-blue-300">
+    60→        <CardContent className="p-5 flex flex-col h-full gap-4">
+    61→          <div className="flex items-start justify-between gap-3">
+    62→            <div
+    63→              className={cn(
+    64→                "inline-flex size-12 items-center justify-center rounded-xl ring-1",
+    65→                serviceIconBg(service.icon)
+    66→              )}
+    67→            >
+    68→              <ServiceIcon name={service.icon} className="size-6" />
+    69→            </div>
+    70→            {service.popular && (
+    71→              <Badge className="bg-orange-500 hover:bg-orange-500 text-white border-0">
+    72→                Popular
+    73→              </Badge>
+    74→            )}
+    75→          </div>
+    76→
+    77→          <div className="flex-1">
+    78→            <h3 className="font-bold text-blue-900 text-lg leading-snug">
+    79→              {service.name}
+    80→            </h3>
+    81→            <p className="text-sm text-zinc-600 mt-1.5 line-clamp-3">
+    82→              {service.description}
+    83→            </p>
+    84→          </div>
+    85→
+    86→          <div className="grid grid-cols-2 gap-2 text-xs">
+    87→            <div className="rounded-lg bg-zinc-50 p-2">
+    88→              <p className="text-zinc-500">Price from</p>
+    89→              <p className="font-bold text-blue-800 text-sm">
+    90→                {service.priceFrom ?? "Quote"}
+    91→                {service.priceTo ? (
+    92→                  <span className="text-zinc-400 font-normal">
+    93→                    {" "}
+    94→                    – {service.priceTo}
+    95→                  </span>
+    96→                ) : null}
+    97→              </p>
+    98→            </div>
+    99→            <div className="rounded-lg bg-zinc-50 p-2">
+   100→              <p className="text-zinc-500">Turnaround</p>
+   101→              <p className="font-semibold text-zinc-700 text-sm">
+   102→                {service.turnaround ?? "Same day"}
+   103→              </p>
+   104→            </div>
+   105→          </div>
+   106→
+   107→          <div className="flex gap-2">
+   108→            <NavLink
+   109→              href={`/services/${service.slug}`}
+   110→              className="flex-1"
+   111→            >
+   112→              <Button
+   113→                variant="outline"
+   114→                className="w-full border-blue-200 text-blue-700 hover:bg-blue-50"
+   115→                size="sm"
+   116→              >
+   117→                View Details
+   118→                <ChevronRight className="size-4" />
+   119→              </Button>
+   120→            </NavLink>
+   121→            <Button
+   122→              size="sm"
+   123→              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+   124→              onClick={() => goContact()}
+   125→            >
+   126→              <Wrench className="size-4" />
+   127→              Book this repair
+   128→            </Button>
+   129→          </div>
+   130→        </CardContent>
+   131→      </Card>
+   132→    </motion.div>
+   133→  );
+   134→}
+   135→
+   136→interface HomePageProps {
+   137→  services: Service[];
+   138→}
+   139→
+   140→export function HomePage({ services }: HomePageProps) {
+   141→  const branding = useNav((s) => s.branding);
+   142→  const goContact = useNav((s) => s.goContact);
+   143→  const goServices = useNav((s) => s.goServices);
+   144→  const goReviews = useNav((s) => s.goReviews);
+   145→  const goCollection = useNav((s) => s.goCollection);
+   146→  const goBlog = useNav((s) => s.goBlog);
+   147→  const goServiceDetail = useNav((s) => s.goServiceDetail);
+   148→
+   149→  const businessName = branding?.businessName ?? "Gadget Repairs Glasgow";
+   150→  const phone = branding?.phone ?? "+44 7777 200149";
+   151→  const phoneDigits = telDigits(phone);
+   152→  const rating = branding?.rating ?? 4.9;
+   153→  const reviewCount = branding?.reviewCount ?? 150;
+   154→  const years = branding?.yearsExperience ?? 10;
+   155→
+   156→  const featured = services.filter((s) => s.popular).slice(0, 4);
+   157→  const list = featured.length ? featured : services.slice(0, 4);
+   158→
+   159→  const [quickQuote, setQuickQuote] = useState({
+   160→    device: "",
+   161→    model: "",
+   162→    issue: "",
+   163→  });
+   164→  const [submitted, setSubmitted] = useState(false);
+   165→
+   166→  const handleQuickQuote = (e: React.FormEvent) => {
+   167→    e.preventDefault();
+   168→    setSubmitted(true);
+   169→    setTimeout(() => goContact(), 700);
+   170→  };
+   171→
+   172→  return (
+   173→    <>
+   174→      {/* Hero */}
+   175→      <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white overflow-hidden">
+   176→        <div className="absolute inset-0 opacity-10" aria-hidden>
+   177→          <div className="absolute -top-20 -right-20 size-80 rounded-full bg-orange-500 blur-3xl" />
+   178→          <div className="absolute -bottom-32 -left-20 size-96 rounded-full bg-blue-400 blur-3xl" />
+   179→        </div>
+   180→        <Section className="relative py-14 sm:py-20">
+   181→          <div className="grid lg:grid-cols-2 gap-10 items-center">
+   182→            <motion.div
+   183→              initial={{ opacity: 0, x: -16 }}
+   184→              animate={{ opacity: 1, x: 0 }}
+   185→              transition={{ duration: 0.4 }}
+   186→              className="space-y-6"
+   187→            >
+   188→              <Badge className="bg-orange-500/20 text-orange-300 border border-orange-400/30 backdrop-blur">
+   189→                ⭐ #1 Repair Shop in Glasgow
+   190→              </Badge>
+   191→              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">
+   192→                Phone, MacBook &amp; Gadget Repair{" "}
+   193→                <span className="text-orange-400">in Glasgow</span>
+   194→              </h1>
+   195→              <p className="text-blue-100 text-base sm:text-lg max-w-xl">
+   196→                {branding?.tagline ??
+   197→                  "Professional Mobile Phone & Tablet Repair, Unlocking, and Accessories"}
+   198→                . Same-day service, 12-month warranty, free doorstep collection
+   199→                across Glasgow.
+   200→              </p>
+   201→
+   202→              <div className="flex items-center gap-3 flex-wrap">
+   203→                <div className="flex items-center gap-2">
+   204→                  <StarRating value={rating} size={20} />
+   205→                  <span className="font-bold text-orange-400">{rating}</span>
+   206→                  <span className="text-blue-200 text-sm">
+   207→                    / 5 ({reviewCount}+ reviews)
+   208→                  </span>
+   209→                </div>
+   210→                <span className="text-blue-300">•</span>
+   211→                <span className="inline-flex items-center gap-1.5 text-blue-100 text-sm">
+   212→                  <BadgeCheck className="size-4 text-orange-400" />
+   213→                  {years}+ years experience
+   214→                </span>
+   215→              </div>
+   216→
+   217→              <div className="flex flex-wrap gap-3 pt-2">
+   218→                <Button
+   219→                  size="lg"
+   220→                  className="bg-orange-500 hover:bg-orange-600 text-white"
+   221→                  onClick={() => goContact()}
+   222→                >
+   223→                  <Wrench className="size-5" />
+   224→                  Book a Repair
+   225→                </Button>
+   226→                <a href={`tel:${phoneDigits}`}>
+   227→                  <Button
+   228→                    size="lg"
+   229→                    variant="outline"
+   230→                    className="border-white/30 text-white hover:bg-white/10 bg-transparent"
+   231→                  >
+   232→                    <Phone className="size-5" />
+   233→                    {phone}
+   234→                  </Button>
+   235→                </a>
+   236→                <NavLink href="/collection">
+   237→                  <Button
+   238→                    size="lg"
+   239→                    variant="outline"
+   240→                    className="border-white/30 text-white hover:bg-white/10 bg-transparent"
+   241→                  >
+   242→                    <Truck className="size-5" />
+   243→                    Free Collection
+   244→                  </Button>
+   245→                </NavLink>
+   246→              </div>
+   247→
+   248→              <div className="flex flex-wrap gap-4 pt-4 text-xs text-blue-200">
+   249→                <span className="inline-flex items-center gap-1">
+   250→                  <ShieldCheck className="size-4 text-orange-400" />
+   251→                  12-Month Warranty
+   252→                </span>
+   253→                <span className="inline-flex items-center gap-1">
+   254→                  <Clock className="size-4 text-orange-400" />
+   255→                  Same-Day Service
+   256→                </span>
+   257→                <span className="inline-flex items-center gap-1">
+   258→                  <MapPin className="size-4 text-orange-400" />
+   259→                  172 Trongate, Glasgow
+   260→                </span>
+   261→              </div>
+   262→            </motion.div>
+   263→
+   264→            {/* 60-second quote widget */}
+   265→            <motion.div
+   266→              initial={{ opacity: 0, y: 16 }}
+   267→              animate={{ opacity: 1, y: 0 }}
+   268→              transition={{ duration: 0.4, delay: 0.1 }}
+   269→              className="bg-white text-zinc-800 rounded-2xl shadow-2xl p-6 sm:p-8 ring-1 ring-black/5"
+   270→            >
+   271→              <div className="flex items-center gap-2 mb-1">
+   272→                <Zap className="size-5 text-orange-500" />
+   273→                <h2 className="text-lg font-bold text-blue-900">
+   274→                  Get a Quote in 60 Seconds
+   275→                </h2>
+   276→              </div>
+   277→              <p className="text-sm text-zinc-500 mb-4">
+   278→                Tell us what's broken — we'll give you a fixed price.
+   279→              </p>
+   280→
+   281→              {!submitted ? (
+   282→                <form
+   283→                  onSubmit={handleQuickQuote}
+   284→                  className="space-y-3"
+   285→                >
+   286→                  <div>
+   287→                    <label className="text-xs font-medium text-zinc-700 mb-1 block">
+   288→                      Device type
+   289→                    </label>
+   290→                    <select
+   291→                      required
+   292→                      value={quickQuote.device}
+   293→                      onChange={(e) =>
+   294→                        setQuickQuote((s) => ({ ...s, device: e.target.value }))
+   295→                      }
+   296→                      className="w-full h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+   297→                    >
+   298→                      <option value="">Select device…</option>
+   299→                      <option value="Mobile Phone">Mobile Phone</option>
+   300→                      <option value="MacBook">MacBook</option>
+   301→                      <option value="Laptop">Laptop</option>
+   302→                      <option value="Tablet / iPad">Tablet / iPad</option>
+   303→                      <option value="Game Console">Game Console</option>
+   304→                      <option value="Desktop PC">Desktop PC</option>
+   305→                      <option value="Smart Watch">Smart Watch</option>
+   306→                      <option value="GHD Straightener">GHD Straightener</option>
+   307→                    </select>
+   308→                  </div>
+   309→                  <div>
+   310→                    <label className="text-xs font-medium text-zinc-700 mb-1 block">
+   311→                      Model
+   312→                    </label>
+   313→                    <input
+   314→                      required
+   315→                      value={quickQuote.model}
+   316→                      onChange={(e) =>
+   317→                        setQuickQuote((s) => ({ ...s, model: e.target.value }))
+   318→                      }
+   319→                      placeholder="e.g. iPhone 14 Pro"
+   320→                      className="w-full h-10 rounded-md border border-zinc-300 px-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+   321→                    />
+   322→                  </div>
+   323→                  <div>
+   324→                    <label className="text-xs font-medium text-zinc-700 mb-1 block">
+   325→                      What's wrong with it?
+   326→                    </label>
+   327→                    <textarea
+   328→                      required
+   329→                      value={quickQuote.issue}
+   330→                      onChange={(e) =>
+   331→                        setQuickQuote((s) => ({ ...s, issue: e.target.value }))
+   332→                      }
+   333→                      placeholder="e.g. Cracked screen, won't charge…"
+   334→                      rows={3}
+   335→                      className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
+   336→                    />
+   337→                  </div>
+   338→                  <Button
+   339→                    type="submit"
+   340→                    className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+   341→                  >
+   342→                    Get My Free Quote
+   343→                    <ArrowRight className="size-4" />
+   344→                  </Button>
+   345→                </form>
+   346→              ) : (
+   347→                <div className="py-6 text-center">
+   348→                  <div className="size-12 rounded-full bg-emerald-100 text-emerald-700 inline-flex items-center justify-center mx-auto mb-3">
+   349→                    <BadgeCheck className="size-6" />
+   350→                  </div>
+   351→                  <p className="font-semibold text-zinc-900">
+   352→                    Thanks! Redirecting you to booking…
+   353→                  </p>
+   354→                  <p className="text-sm text-zinc-500 mt-1">
+   355→                    We'll get you a fixed price quote in seconds.
+   356→                  </p>
+   357→                </div>
+   358→              )}
+   359→            </motion.div>
+   360→          </div>
+   361→        </Section>
+   362→      </section>
+   363→
+   364→      {/* Trust badges */}
+   365→      <Section className="py-8 sm:py-10">
+   366→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+   367→          {[
+   368→            {
+   369→              icon: Clock,
+   370→              title: "Same-Day Service",
+   371→              desc: "Most repairs in 30–90 mins",
+   372→            },
+   373→            {
+   374→              icon: ShieldCheck,
+   375→              title: "12-Month Warranty",
+   376→              desc: "Parts & labour covered",
+   377→            },
+   378→            {
+   379→              icon: Truck,
+   380→              title: "Free Collection",
+   381→              desc: "Across Glasgow",
+   382→            },
+   383→            {
+   384→              icon: BadgeCheck,
+   385→              title: `${years}+ Years Experience`,
+   386→              desc: "Trusted by 10,000+ customers",
+   387→            },
+   388→          ].map((b) => (
+   389→            <div
+   390→              key={b.title}
+   391→              className="flex items-center gap-3 rounded-xl bg-blue-50 p-3 ring-1 ring-blue-100"
+   392→            >
+   393→              <span className="inline-flex size-10 items-center justify-center rounded-lg bg-blue-600 text-white shrink-0">
+   394→                <b.icon className="size-5" />
+   395→              </span>
+   396→              <div className="min-w-0">
+   397→                <p className="font-semibold text-blue-900 text-sm">{b.title}</p>
+   398→                <p className="text-xs text-zinc-600 truncate">{b.desc}</p>
+   399→              </div>
+   400→            </div>
+   401→          ))}
+   402→        </div>
+   403→      </Section>
+   404→
+   405→      {/* Featured services */}
+   406→      <Section className="py-12 sm:py-16">
+   407→        <div className="flex items-end justify-between gap-4 mb-8">
+   408→          <div>
+   409→            <Badge className="bg-blue-50 text-blue-700 border border-blue-100">
+   410→              Our Services
+   411→            </Badge>
+   412→            <h2 className="text-2xl sm:text-3xl font-bold text-blue-900 mt-2">
+   413→              Featured Repairs
+   414→            </h2>
+   415→            <p className="text-zinc-600 mt-1 max-w-2xl">
+   416→              Eight professional repair services for every gadget — phones,
+   417→              MacBooks, laptops, tablets, consoles, computers, smart watches and
+   418→              GHD straighteners.
+   419→            </p>
+   420→          </div>
+   421→          <NavLink href="/services" className="hidden sm:block">
+   422→            <Button variant="outline" className="border-blue-200 text-blue-700">
+   423→              View all services
+   424→              <ArrowRight className="size-4" />
+   425→            </Button>
+   426→          </NavLink>
+   427→        </div>
+   428→        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+   429→          {list.map((s) => (
+   430→            <ServiceCard key={s.id} service={s} />
+   431→          ))}
+   432→        </div>
+   433→        <div className="mt-6 sm:hidden">
+   434→          <NavLink href="/services">
+   435→            <Button
+   436→              variant="outline"
+   437→              className="w-full border-blue-200 text-blue-700"
+   438→            >
+   439→              View all services
+   440→              <ArrowRight className="size-4" />
+   441→            </Button>
+   442→          </NavLink>
+   443→        </div>
+   444→      </Section>
+   445→
+   446→      {/* Collection preview */}
+   447→      <section className="bg-blue-950 text-white py-14 sm:py-20">
+   448→        <Section>
+   449→          <div className="grid lg:grid-cols-2 gap-8 items-center">
+   450→            <motion.div
+   451→              initial={{ opacity: 0, y: 12 }}
+   452→              whileInView={{ opacity: 1, y: 0 }}
+   453→              viewport={{ once: true }}
+   454→              transition={{ duration: 0.4 }}
+   455→              className="space-y-4"
+   456→            >
+   457→              <Badge className="bg-orange-500/20 text-orange-300 border border-orange-400/30">
+   458→                Free Doorstep Collection
+   459→              </Badge>
+   460→              <h2 className="text-2xl sm:text-3xl font-bold">
+   461→                Can't come to us? We'll come to you.
+   462→              </h2>
+   463→              <p className="text-blue-100 text-base">
+   464→                Book a free doorstep collection anywhere in Glasgow. We'll pick
+   465→                up your device, fix it, and deliver it back — all at no extra
+   466→                cost.
+   467→              </p>
+   468→              <ul className="space-y-2 text-blue-100 text-sm">
+   469→                {[
+   470→                  "Free collection & delivery across Glasgow city centre",
+   471→                  "Same-day or next-day turnaround",
+   472→                  "Live tracking from booking to delivery",
+   473→                ].map((item) => (
+   474→                  <li key={item} className="flex items-start gap-2">
+   475→                    <BadgeCheck className="size-4 text-orange-400 mt-0.5 shrink-0" />
+   476→                    {item}
+   477→                  </li>
+   478→                ))}
+   479→              </ul>
+   480→              <div className="pt-2">
+   481→                <NavLink href="/collection">
+   482→                  <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+   483→                    Learn about collection
+   484→                    <ArrowRight className="size-4" />
+   485→                  </Button>
+   486→                </NavLink>
+   487→              </div>
+   488→            </motion.div>
+   489→
+   490→            <motion.div
+   491→              initial={{ opacity: 0, y: 12 }}
+   492→              whileInView={{ opacity: 1, y: 0 }}
+   493→              viewport={{ once: true }}
+   494→              transition={{ duration: 0.4, delay: 0.1 }}
+   495→              className="grid grid-cols-2 gap-3"
+   496→            >
+   497→              {[
+   498→                { icon: CalendarClock, title: "1. Book Online", desc: "Choose collection date & time" },
+   499→                { icon: Truck, title: "2. We Collect", desc: "Free pickup at your door" },
+   500→                { icon: Wrench, title: "3. We Repair", desc: "Same-day turnaround" },
+   501→                { icon: BadgeCheck, title: "4. We Deliver", desc: "Free return delivery" },
+   502→              ].map((s) => (
+   503→                <div
+   504→                  key={s.title}
+   505→                  className="bg-white/5 ring-1 ring-white/10 rounded-xl p-4"
+   506→                >
+   507→                  <s.icon className="size-6 text-orange-400" />
+   508→                  <p className="font-semibold text-white text-sm mt-2">
+   509→                    {s.title}
+   510→                  </p>
+   511→                  <p className="text-xs text-blue-200">{s.desc}</p>
+   512→                </div>
+   513→              ))}
+   514→            </motion.div>
+   515→          </div>
+   516→        </Section>
+   517→      </section>
+   518→
+   519→      {/* Reviews preview */}
+   520→      <Section className="py-12 sm:py-16">
+   521→        <div className="flex items-end justify-between gap-4 mb-8">
+   522→          <div>
+   523→            <Badge className="bg-orange-50 text-orange-600 border border-orange-100">
+   524→              Customer Reviews
+   525→            </Badge>
+   526→            <h2 className="text-2xl sm:text-3xl font-bold text-blue-900 mt-2">
+   527→              Loved by Glasgow
+   528→            </h2>
+   529→            <div className="flex items-center gap-2 mt-2">
+   530→              <StarRating value={rating} size={18} />
+   531→              <span className="font-bold text-blue-900">{rating}</span>
+   532→              <span className="text-sm text-zinc-600">
+   533→                from {reviewCount}+ happy customers
+   534→              </span>
+   535→            </div>
+   536→          </div>
+   537→          <NavLink href="/reviews" className="hidden sm:block">
+   538→            <Button variant="outline" className="border-blue-200 text-blue-700">
+   539→              Read all reviews
+   540→              <ArrowRight className="size-4" />
+   541→            </Button>
+   542→          </NavLink>
+   543→        </div>
+   544→        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+   545→          {STATIC_REVIEWS.slice(0, 3).map((r) => (
+   546→            <Card key={r.id} className="border-zinc-200">
+   547→              <CardContent className="p-5 space-y-3">
+   548→                <div className="flex items-center justify-between">
+   549→                  <div className="flex items-center gap-3">
+   550→                    <div className="size-10 rounded-full bg-blue-600 text-white inline-flex items-center justify-center font-bold text-sm">
+   551→                      {r.author.charAt(0)}
+   552→                    </div>
+   553→                    <div>
+   554→                      <p className="font-semibold text-zinc-900 text-sm">
+   555→                        {r.author}
+   556→                      </p>
+   557→                      <p className="text-xs text-zinc-500">{r.device}</p>
+   558→                    </div>
+   559→                  </div>
+   560→                  <Badge variant="outline" className="text-[10px]">
+   561→                    {r.source}
+   562→                  </Badge>
+   563→                </div>
+   564→                <StarRating value={r.rating} size={14} />
+   565→                <p className="text-sm text-zinc-700 line-clamp-4">
+   566→                  {r.comment}
+   567→                </p>
+   568→              </CardContent>
+   569→            </Card>
+   570→          ))}
+   571→        </div>
+   572→      </Section>
+   573→
+   574→      {/* Contact CTA */}
+   575→      <section className="bg-orange-500 text-white">
+   576→        <Section className="py-10 sm:py-14">
+   577→          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+   578→            <div>
+   579→              <h2 className="text-2xl sm:text-3xl font-bold">
+   580→                Ready to get your device fixed?
+   581→              </h2>
+   582→              <p className="text-orange-100 mt-1">
+   583→                Walk in to 172 Trongate, Glasgow — or book online and we'll
+   584→                collect for free.
+   585→              </p>
+   586→            </div>
+   587→            <div className="flex gap-3 flex-wrap">
+   588→              <a href={`tel:${phoneDigits}`}>
+   589→                <Button
+   590→                  size="lg"
+   591→                  variant="outline"
+   592→                  className="border-white text-white hover:bg-white/10 bg-transparent"
+   593→                >
+   594→                  <Phone className="size-5" />
+   595→                  {phone}
+   596→                </Button>
+   597→              </a>
+   598→              <Button
+   599→                size="lg"
+   600→                className="bg-blue-900 hover:bg-blue-950 text-white"
+   601→                onClick={() => goContact()}
+   602→              >
+   603→                <Wrench className="size-5" />
+   604→                Book Online
+   605→              </Button>
+   606→            </div>
+   607→          </div>
+   608→        </Section>
+   609→      </section>
+   610→
+   611→      {/* Blog preview */}
+   612→      <Section className="py-12 sm:py-16">
+   613→        <div className="flex items-end justify-between gap-4 mb-8">
+   614→          <div>
+   615→            <Badge className="bg-blue-50 text-blue-700 border border-blue-100">
+   616→              Repair Blog
+   617→            </Badge>
+   618→            <h2 className="text-2xl sm:text-3xl font-bold text-blue-900 mt-2">
+   619→              Guides &amp; Tips
+   620→            </h2>
+   621→          </div>
+   622→          <NavLink href="/blog" className="hidden sm:block">
+   623→            <Button variant="outline" className="border-blue-200 text-blue-700">
+   624→              Read the blog
+   625→              <ArrowRight className="size-4" />
+   626→            </Button>
+   627→          </NavLink>
+   628→        </div>
+   629→        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+   630→          {STATIC_POSTS.map((p) => (
+   631→            <NavLink key={p.id} href={`/blog/${p.slug}`}>
+   632→              <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow border-zinc-200 group">
+   633→                <div className="aspect-[16/10] overflow-hidden bg-zinc-100">
+   634→                  <img
+   635→                    src={p.coverImage}
+   636→                    alt={p.title}
+   637→                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+   638→                    loading="lazy"
+   639→                  />
+   640→                </div>
+   641→                <CardContent className="p-4">
+   642→                  <Badge
+   643→                    variant="outline"
+   644→                    className="text-[10px] mb-2 border-blue-200 text-blue-700"
+   645→                  >
+   646→                    {p.category}
+   647→                  </Badge>
+   648→                  <h3 className="font-semibold text-blue-900 text-sm leading-snug line-clamp-3">
+   649→                    {p.title}
+   650→                  </h3>
+   651→                  <p className="text-xs text-zinc-500 mt-2 line-clamp-2">
+   652→                    {p.excerpt}
+   653→                  </p>
+   654→                </CardContent>
+   655→              </Card>
+   656→            </NavLink>
+   657→          ))}
+   658→        </div>
+   659→      </Section>
+   660→
+   661→      {/* Final CTA */}
+   662→      <section className="bg-gradient-to-br from-blue-900 to-blue-800 text-white">
+   663→        <Section className="py-14 sm:py-20 text-center">
+   664→          <Star className="size-8 text-orange-400 mx-auto" />
+   665→          <h2 className="text-2xl sm:text-4xl font-bold mt-3">
+   666→            Glasgow's most trusted repair shop
+   667→          </h2>
+   668→          <p className="text-blue-100 mt-3 max-w-2xl mx-auto">
+   669→            Walk in today at 172 Trongate, Glasgow — or book online and get free
+   670→            doorstep collection. Same-day service, 12-month warranty on every
+   671→            repair.
+   672→          </p>
+   673→          <div className="flex flex-wrap gap-3 justify-center mt-6">
+   674→            <Button
+   675→              size="lg"
+   676→              className="bg-orange-500 hover:bg-orange-600 text-white"
+   677→              onClick={() => goContact()}
+   678→            >
+   679→              <Wrench className="size-5" />
+   680→              Book a Repair
+   681→            </Button>
+   682→            <a href={`tel:${phoneDigits}`}>
+   683→              <Button
+   684→                size="lg"
+   685→                variant="outline"
+   686→                className="border-white/30 text-white hover:bg-white/10 bg-transparent"
+   687→              >
+   688→                <Phone className="size-5" />
+   689→                Call {phone}
+   690→              </Button>
+   691→            </a>
+   692→          </div>
+   693→        </Section>
+   694→      </section>
+   695→    </>
+   696→  );
+   697→}
+   698→
+   699→export { HomePage as default, HomePage };
+   700→

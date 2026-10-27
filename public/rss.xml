@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Gadget Repairs Glasgow Blog</title>
+    <link>https://www.gadgetrepairsglasgow.co.uk/blog</link>
+    <atom:link href="https://www.gadgetrepairsglasgow.co.uk/rss.xml" rel="self" type="application/rss+xml" />
+    <description>Expert phone repair guides, tips and news from Glasgow's trusted repair shop. Screen repair, battery health, water damage, unlocking and more.</description>
+    <language>en-GB</language>
+    <lastBuildDate>Mon, 20 Oct 2025 10:00:00 +0100</lastBuildDate>
+    <item>
+      <title>Cracked iPhone Screen in Glasgow? Here's Your Complete Repair Guide</title>
+      <link>https://www.gadgetrepairsglasgow.co.uk/blog/cracked-iphone-screen-glasgow-guide</link>
+      <guid isPermaLink="true">https://www.gadgetrepairsglasgow.co.uk/blog/cracked-iphone-screen-glasgow-guide</guid>
+      <pubDate>Mon, 20 Oct 2025 10:00:00 +0100</pubDate>
+      <description>Everything you need to know about getting your iPhone screen fixed in Glasgow — costs, turnaround times, warranty, and how to avoid dodgy shops.</description>
+      <category>Phone Repair</category>
+    </item>
+    <item>
+      <title>7 Signs Your Phone Battery Needs Replacing (Before It Swells)</title>
+      <link>https://www.gadgetrepairsglasgow.co.uk/blog/phone-battery-replacement-signs</link>
+      <guid isPermaLink="true">https://www.gadgetrepairsglasgow.co.uk/blog/phone-battery-replacement-signs</guid>
+      <pubDate>Sun, 19 Oct 2025 10:00:00 +0100</pubDate>
+      <description>Is your phone dying by lunchtime or getting suspiciously hot? Here are the warning signs that say it's time for a battery replacement.</description>
+      <category>Battery</category>
+    </item>
+    <item>
+      <title>Phone Unlocking Explained: Is It Legal &amp; How Does It Work?</title>
+      <link>https://www.gadgetrepairsglasgow.co.uk/blog/phone-unlocking-explained-glasgow</link>
+      <guid isPermaLink="true">https://www.gadgetrepairsglasgow.co.uk/blog/phone-unlocking-explained-glasgow</guid>
+      <pubDate>Sat, 18 Oct 2025 10:00:00 +0100</pubDate>
+      <description>Thinking about unlocking your phone to switch networks? Here's everything Glasgow customers need to know — including the law.</description>
+      <category>Unlocking</category>
+    </item>
+    <item>
+      <title>Dropped Your Phone in Water? Do These 5 Things Immediately</title>
+      <link>https://www.gadgetrepairsglasgow.co.uk/blog/water-damaged-phone-what-to-do</link>
+      <guid isPermaLink="true">https://www.gadgetrepairsglasgow.co.uk/blog/water-damaged-phone-what-to-do</guid>
+      <pubDate>Fri, 17 Oct 2025 10:00:00 +0100</pubDate>
+      <description>A liquid-damaged phone isn't always a write-off. Follow these steps and you could save your device — and your data.</description>
+      <category>Water Damage</category>
+    </item>
+  </channel>
+</rss>

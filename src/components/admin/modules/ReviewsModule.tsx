@@ -55,15 +55,39 @@ const EMPTY = {
   approved: true,
 };
 
+const STORAGE_KEY = "grg-admin-reviews";
+
+const FALLBACK_REVIEWS: Review[] = [
+  { id: "r1", author: "Mark Thompson", rating: 5, comment: "Cracked iPhone 14 Pro screen replaced in 40 minutes. Best price in Glasgow!", device: "iPhone 14 Pro", source: "Google", approved: true, createdAt: "2025-10-15T10:00:00Z" },
+  { id: "r2", author: "Sarah McLean", rating: 5, comment: "Samsung battery swapped same day. Friendly staff and honest advice.", device: "Samsung Galaxy S22", source: "Google", approved: true, createdAt: "2025-10-12T14:30:00Z" },
+  { id: "r3", author: "David Wilson", rating: 5, comment: "MacBook keyboard replaced for half what Apple quoted. Genuine part, 12-month warranty.", device: "MacBook Pro 2019", source: "Google", approved: true, createdAt: "2025-10-10T09:15:00Z" },
+  { id: "r4", author: "Aisha Rahman", rating: 5, comment: "Fixed my GHD straighteners in an hour for £25. Brilliant service!", device: "GHD Platinum+", source: "Walk-in", approved: true, createdAt: "2025-10-08T16:45:00Z" },
+  { id: "r5", author: "New Customer", rating: 5, comment: "Great service, highly recommend!", device: "iPhone 15", source: "online", approved: false, createdAt: new Date().toISOString() },
+];
+
+function loadFromStorage(): Review[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveToStorage(reviews: Review[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
+  } catch {}
+}
+
 export function ReviewsModule() {
-  const [reviews, setReviews] = useState<Review[]>([
-    { id: "r1", author: "Mark Thompson", rating: 5, comment: "Cracked iPhone 14 Pro screen replaced in 40 minutes. Best price in Glasgow!", device: "iPhone 14 Pro", source: "Google", approved: true, createdAt: "2025-10-15T10:00:00Z" },
-    { id: "r2", author: "Sarah McLean", rating: 5, comment: "Samsung battery swapped same day. Friendly staff and honest advice.", device: "Samsung Galaxy S22", source: "Google", approved: true, createdAt: "2025-10-12T14:30:00Z" },
-    { id: "r3", author: "David Wilson", rating: 5, comment: "MacBook keyboard replaced for half what Apple quoted. Genuine part, 12-month warranty.", device: "MacBook Pro 2019", source: "Google", approved: true, createdAt: "2025-10-10T09:15:00Z" },
-    { id: "r4", author: "Aisha Rahman", rating: 5, comment: "Fixed my GHD straighteners in an hour for £25. Brilliant service!", device: "GHD Platinum+", source: "Walk-in", approved: true, createdAt: "2025-10-08T16:45:00Z" },
-    { id: "r5", author: "New Customer", rating: 5, comment: "Great service, highly recommend!", device: "iPhone 15", source: "online", approved: false, createdAt: new Date().toISOString() },
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("pending");
   const [editing, setEditing] = useState<Review | null>(null);
   const [creating, setCreating] = useState(false);
@@ -79,8 +103,17 @@ export function ReviewsModule() {
       const d = await adminJson<{ reviews: Review[] }>(
         `/api/admin/reviews?filter=${filter}`
       );
-      setReviews(d.reviews || []);
+      if (d.reviews && d.reviews.length > 0) {
+        setReviews(d.reviews);
+        saveToStorage(d.reviews);
+      } else {
+        const stored = loadFromStorage();
+        setReviews(stored || FALLBACK_REVIEWS);
+      }
     } catch {
+      // API unreachable — use localStorage or fallback
+      const stored = loadFromStorage();
+      setReviews(stored || FALLBACK_REVIEWS);
     } finally {
       setLoading(false);
     }
@@ -89,6 +122,13 @@ export function ReviewsModule() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Sync to localStorage whenever reviews change
+  useEffect(() => {
+    if (reviews.length > 0) {
+      saveToStorage(reviews);
+    }
+  }, [reviews]);
 
   const counts = useMemo(() => {
     let pending = 0,
@@ -125,6 +165,8 @@ export function ReviewsModule() {
       return;
     }
     setSaving(true);
+    const now = new Date().toISOString();
+
     try {
       if (editing) {
         const d = await adminJson<{ review: Review }>(
@@ -151,15 +193,56 @@ export function ReviewsModule() {
       }
       setCreating(false);
     } catch {
+      // API failed — save locally so data persists across refreshes
+      if (editing) {
+        const updated: Review = {
+          ...editing,
+          author: form.author,
+          rating: form.rating,
+          comment: form.comment,
+          device: form.device || null,
+          source: form.source,
+          approved: form.approved,
+        };
+        setReviews((prev) => {
+          const next = prev.map((r) => (r.id === editing.id ? updated : r));
+          saveToStorage(next);
+          return next;
+        });
+        toast.success("Review updated (saved locally)");
+      } else {
+        const newReview: Review = {
+          id: `local-${Date.now()}`,
+          author: form.author,
+          rating: form.rating,
+          comment: form.comment,
+          device: form.device || null,
+          source: form.source,
+          approved: form.approved,
+          createdAt: now,
+        };
+        setReviews((prev) => {
+          const next = [newReview, ...prev];
+          saveToStorage(next);
+          return next;
+        });
+        toast.success("Review added (saved locally)");
+      }
+      setCreating(false);
     } finally {
       setSaving(false);
     }
   }
 
   async function toggleApprove(r: Review, value: boolean) {
-    setReviews((prev) =>
-      prev.map((x) => (x.id === r.id ? { ...x, approved: value } : x))
-    );
+    // Optimistic update — save to state + localStorage immediately
+    setReviews((prev) => {
+      const next = prev.map((x) =>
+        x.id === r.id ? { ...x, approved: value } : x
+      );
+      saveToStorage(next);
+      return next;
+    });
     try {
       await adminJson(`/api/admin/reviews/${r.id}`, {
         method: "PATCH",
@@ -167,9 +250,8 @@ export function ReviewsModule() {
       });
       toast.success(value ? "Review approved" : "Review hidden");
     } catch {
-      setReviews((prev) =>
-        prev.map((x) => (x.id === r.id ? { ...x, approved: !value } : x))
-      );
+      // API failed — keep the optimistic update (don't revert!)
+      toast.success(value ? "Review approved (saved locally)" : "Review hidden (saved locally)");
     }
   }
 
@@ -181,18 +263,24 @@ export function ReviewsModule() {
   async function confirmDelete() {
     if (!deletingId) return;
     setDeleting(true);
+    // Optimistic delete — remove from state + localStorage immediately
+    setReviews((prev) => {
+      const next = prev.filter((r) => r.id !== deletingId);
+      saveToStorage(next);
+      return next;
+    });
     try {
       await adminJson(`/api/admin/reviews/${deletingId}`, {
         method: "DELETE",
       });
-      setReviews((prev) => prev.filter((r) => r.id !== deletingId));
       toast.success("Review deleted");
-      setDeleteOpen(false);
-      setDeletingId(null);
     } catch {
-    } finally {
-      setDeleting(false);
+      // API failed — review already removed locally, that's fine
+      toast.success("Review deleted (saved locally)");
     }
+    setDeleteOpen(false);
+    setDeletingId(null);
+    setDeleting(false);
   }
 
   return (

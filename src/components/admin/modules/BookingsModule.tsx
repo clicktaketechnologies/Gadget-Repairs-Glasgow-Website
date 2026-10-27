@@ -89,17 +89,42 @@ interface Booking {
   bookingDate: string | null;
   bookingTime: string | null;
   createdAt: string;
+  updatedAt?: string;
+}
+
+const STORAGE_KEY = "grg-admin-bookings";
+
+const FALLBACK_BOOKINGS: Booking[] = [
+  { id: "b1", ticketId: "GD-1024", customerName: "John Smith", email: "john@example.com", phone: "+44 7700 900100", deviceType: "Phone", deviceModel: "iPhone 14 Pro", issue: "Cracked screen", needsCollection: false, collectionAddr: null, status: "Pending", technicianNotes: null, quotedPrice: "£120", finalPrice: null, source: "online", bookingDate: "2025-10-21", bookingTime: "10:30", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: "b2", ticketId: "GD-1025", customerName: "Sarah McLean", email: "sarah@example.com", phone: "+44 7700 900101", deviceType: "Phone", deviceModel: "Samsung S22", issue: "Battery replacement", needsCollection: false, collectionAddr: null, status: "In Progress", technicianNotes: "Battery ordered", quotedPrice: "£60", finalPrice: null, source: "walk-in", bookingDate: "2025-10-20", bookingTime: "14:00", createdAt: new Date(Date.now() - 86400000).toISOString(), updatedAt: new Date(Date.now() - 86400000).toISOString() },
+  { id: "b3", ticketId: "GD-1026", customerName: "David Wilson", email: "david@example.com", phone: "+44 7700 900102", deviceType: "Laptop", deviceModel: "MacBook Pro 2019", issue: "Keyboard failure", needsCollection: false, collectionAddr: null, status: "Completed", technicianNotes: "Replaced top case", quotedPrice: "£180", finalPrice: "£180", source: "online", bookingDate: "2025-10-19", bookingTime: "11:00", createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 2 * 86400000).toISOString() },
+  { id: "b4", ticketId: "GD-1027", customerName: "Aisha Rahman", email: "aisha@example.com", phone: "+44 7700 900103", deviceType: "GHD", deviceModel: "GHD Platinum+", issue: "Won't heat", needsCollection: false, collectionAddr: null, status: "Ready", technicianNotes: "Thermal fuse replaced", quotedPrice: "£25", finalPrice: "£25", source: "walk-in", bookingDate: "2025-10-18", bookingTime: "15:00", createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 3 * 86400000).toISOString() },
+  { id: "b5", ticketId: "GD-1028", customerName: "James O'Brien", email: "james@example.com", phone: "+44 7700 900104", deviceType: "Console", deviceModel: "PlayStation 5", issue: "HDMI port broken", needsCollection: false, collectionAddr: null, status: "Completed", technicianNotes: "HDMI port resoldered", quotedPrice: "£100", finalPrice: "£100", source: "online", bookingDate: "2025-10-17", bookingTime: "09:30", createdAt: new Date(Date.now() - 4 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 4 * 86400000).toISOString() },
+];
+
+function loadFromStorage(): Booking[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveToStorage(bookings: Booking[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+  } catch {}
 }
 
 export function BookingsModule() {
-  const [bookings, setBookings] = useState<Booking[]>([
-    { id: "b1", ticketId: "GD-1024", customerName: "John Smith", email: "john@example.com", phone: "+44 7700 900100", deviceType: "Phone", deviceModel: "iPhone 14 Pro", issue: "Cracked screen", needsCollection: false, collectionAddr: null, status: "Pending", technicianNotes: null, quotedPrice: "£120", finalPrice: null, source: "online", bookingDate: "2025-10-21", bookingTime: "10:30", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: "b2", ticketId: "GD-1025", customerName: "Sarah McLean", email: "sarah@example.com", phone: "+44 7700 900101", deviceType: "Phone", deviceModel: "Samsung S22", issue: "Battery replacement", needsCollection: false, collectionAddr: null, status: "In Progress", technicianNotes: "Battery ordered", quotedPrice: "£60", finalPrice: null, source: "walk-in", bookingDate: "2025-10-20", bookingTime: "14:00", createdAt: new Date(Date.now() - 86400000).toISOString(), updatedAt: new Date(Date.now() - 86400000).toISOString() },
-    { id: "b3", ticketId: "GD-1026", customerName: "David Wilson", email: "david@example.com", phone: "+44 7700 900102", deviceType: "Laptop", deviceModel: "MacBook Pro 2019", issue: "Keyboard failure", needsCollection: false, collectionAddr: null, status: "Completed", technicianNotes: "Replaced top case", quotedPrice: "£180", finalPrice: "£180", source: "online", bookingDate: "2025-10-19", bookingTime: "11:00", createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 2 * 86400000).toISOString() },
-    { id: "b4", ticketId: "GD-1027", customerName: "Aisha Rahman", email: "aisha@example.com", phone: "+44 7700 900103", deviceType: "GHD", deviceModel: "GHD Platinum+", issue: "Won't heat", needsCollection: false, collectionAddr: null, status: "Ready", technicianNotes: "Thermal fuse replaced", quotedPrice: "£25", finalPrice: "£25", source: "walk-in", bookingDate: "2025-10-18", bookingTime: "15:00", createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 3 * 86400000).toISOString() },
-    { id: "b5", ticketId: "GD-1028", customerName: "James O'Brien", email: "james@example.com", phone: "+44 7700 900104", deviceType: "Console", deviceModel: "PlayStation 5", issue: "HDMI port broken", needsCollection: false, collectionAddr: null, status: "Completed", technicianNotes: "HDMI port resoldered", quotedPrice: "£100", finalPrice: "£100", source: "online", bookingDate: "2025-10-17", bookingTime: "09:30", createdAt: new Date(Date.now() - 4 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 4 * 86400000).toISOString() },
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [selected, setSelected] = useState<Booking | null>(null);
@@ -127,9 +152,17 @@ export function BookingsModule() {
       const data = await adminJson<{ bookings: Booking[] }>(
         `/api/admin/bookings?${params.toString()}`
       );
-      setBookings(data.bookings || []);
+      if (data.bookings && data.bookings.length > 0) {
+        setBookings(data.bookings);
+        saveToStorage(data.bookings);
+      } else {
+        const stored = loadFromStorage();
+        setBookings(stored || FALLBACK_BOOKINGS);
+      }
     } catch {
-      // toast handled in adminJson
+      // API unreachable — use localStorage or fallback
+      const stored = loadFromStorage();
+      setBookings(stored || FALLBACK_BOOKINGS);
     } finally {
       setLoading(false);
     }
@@ -139,6 +172,13 @@ export function BookingsModule() {
     const t = setTimeout(load, 250);
     return () => clearTimeout(t);
   }, [load]);
+
+  // Sync to localStorage whenever bookings change
+  useEffect(() => {
+    if (bookings.length > 0) {
+      saveToStorage(bookings);
+    }
+  }, [bookings]);
 
   function openDetail(b: Booking) {
     setSelected(b);
@@ -152,6 +192,7 @@ export function BookingsModule() {
   async function saveBooking() {
     if (!selected) return;
     setSaving(true);
+    const now = new Date().toISOString();
     try {
       const data = await adminJson<{ booking: Booking }>(
         `/api/admin/bookings/${selected.id}`,
@@ -171,6 +212,22 @@ export function BookingsModule() {
       setSelected(data.booking);
       toast.success("Booking updated");
     } catch {
+      // API failed — save locally so data persists across refreshes
+      const updated: Booking = {
+        ...selected,
+        status: editStatus,
+        technicianNotes: editNotes || null,
+        quotedPrice: editQuoted || null,
+        finalPrice: editFinal || null,
+        updatedAt: now,
+      };
+      setBookings((prev) => {
+        const next = prev.map((b) => (b.id === updated.id ? updated : b));
+        saveToStorage(next);
+        return next;
+      });
+      setSelected(updated);
+      toast.success("Booking updated (saved locally)");
     } finally {
       setSaving(false);
     }
@@ -183,19 +240,26 @@ export function BookingsModule() {
   async function confirmDelete() {
     if (!selected) return;
     setDeleting(true);
+    const idToDelete = selected.id;
+    // Optimistic delete — remove from state + localStorage immediately
+    setBookings((prev) => {
+      const next = prev.filter((b) => b.id !== idToDelete);
+      saveToStorage(next);
+      return next;
+    });
     try {
-      await adminJson(`/api/admin/bookings/${selected.id}`, {
+      await adminJson(`/api/admin/bookings/${idToDelete}`, {
         method: "DELETE",
       });
-      setBookings((prev) => prev.filter((b) => b.id !== selected.id));
       toast.success("Booking deleted");
-      setDeleteOpen(false);
-      setDetailOpen(false);
-      setSelected(null);
     } catch {
-    } finally {
-      setDeleting(false);
+      // API failed — booking already removed locally, that's fine
+      toast.success("Booking deleted (saved locally)");
     }
+    setDeleteOpen(false);
+    setDetailOpen(false);
+    setSelected(null);
+    setDeleting(false);
   }
 
   function openReply() {

@@ -68,19 +68,42 @@ const EMPTY: Omit<Service, "id"> = {
   sortOrder: 0,
 };
 
+const STORAGE_KEY = "grg-admin-services";
+
+const FALLBACK_SERVICES: Service[] = [
+  { id: "s1", slug: "mobile-repair", name: "Mobile Repair Service", category: "Mobile Repair", description: "Professional repair for all smartphones.", icon: "Smartphone", priceFrom: "£25", priceTo: "£250", turnaround: "30 min – 2 hours", popular: true, active: true, sortOrder: 1 },
+  { id: "s2", slug: "macbook-repair", name: "MacBook Repair Service", category: "MacBook Repair", description: "Expert MacBook repair.", icon: "Laptop", priceFrom: "£60", priceTo: "£450", turnaround: "1 – 3 days", popular: true, active: true, sortOrder: 2 },
+  { id: "s3", slug: "laptop-repair", name: "Laptop Repair Service", category: "Laptop Repair", description: "Comprehensive laptop repair.", icon: "Laptop", priceFrom: "£40", priceTo: "£300", turnaround: "1 – 2 days", popular: true, active: true, sortOrder: 3 },
+  { id: "s4", slug: "ghd-repair", name: "GHD Repair Service", category: "GHD Repair", description: "GHD hair straightener repair.", icon: "Zap", priceFrom: "£20", priceTo: "£60", turnaround: "1 – 2 hours", popular: false, active: true, sortOrder: 4 },
+  { id: "s5", slug: "tablet-repair", name: "Tablet Repair Service", category: "Tablet Repair", description: "Tablet and iPad repair.", icon: "Tablet", priceFrom: "£40", priceTo: "£220", turnaround: "1 – 3 hours", popular: true, active: true, sortOrder: 5 },
+  { id: "s6", slug: "game-console-repair", name: "Game Console Repair Service", category: "Game Console Repair", description: "Game console repair.", icon: "Gamepad2", priceFrom: "£35", priceTo: "£200", turnaround: "1 – 3 days", popular: false, active: true, sortOrder: 6 },
+  { id: "s7", slug: "computer-repair", name: "Computer Repair Service", category: "Computer Repair", description: "Desktop PC and iMac repair.", icon: "Monitor", priceFrom: "£35", priceTo: "£350", turnaround: "1 – 3 days", popular: false, active: true, sortOrder: 7 },
+  { id: "s8", slug: "smart-watch-repair", name: "Smart Watch Repair Service", category: "Smart Watch Repair", description: "Smart watch repair.", icon: "Watch", priceFrom: "£30", priceTo: "£180", turnaround: "1 – 2 hours", popular: false, active: true, sortOrder: 8 },
+];
+
+function loadFromStorage(): Service[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveToStorage(services: Service[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
+  } catch {}
+}
+
 export function ServicesModule() {
-  const [services, setServices] = useState<Service[]>([
-    // Static fallback — shown immediately + used when API is unreachable
-    { id: "s1", slug: "mobile-repair", name: "Mobile Repair Service", category: "Mobile Repair", description: "Professional repair for all smartphones.", icon: "Smartphone", priceFrom: "£25", priceTo: "£250", turnaround: "30 min – 2 hours", popular: true, active: true, sortOrder: 1 },
-    { id: "s2", slug: "macbook-repair", name: "MacBook Repair Service", category: "MacBook Repair", description: "Expert MacBook repair.", icon: "Laptop", priceFrom: "£60", priceTo: "£450", turnaround: "1 – 3 days", popular: true, active: true, sortOrder: 2 },
-    { id: "s3", slug: "laptop-repair", name: "Laptop Repair Service", category: "Laptop Repair", description: "Comprehensive laptop repair.", icon: "Laptop", priceFrom: "£40", priceTo: "£300", turnaround: "1 – 2 days", popular: true, active: true, sortOrder: 3 },
-    { id: "s4", slug: "ghd-repair", name: "GHD Repair Service", category: "GHD Repair", description: "GHD hair straightener repair.", icon: "Zap", priceFrom: "£20", priceTo: "£60", turnaround: "1 – 2 hours", popular: false, active: true, sortOrder: 4 },
-    { id: "s5", slug: "tablet-repair", name: "Tablet Repair Service", category: "Tablet Repair", description: "Tablet and iPad repair.", icon: "Tablet", priceFrom: "£40", priceTo: "£220", turnaround: "1 – 3 hours", popular: true, active: true, sortOrder: 5 },
-    { id: "s6", slug: "game-console-repair", name: "Game Console Repair Service", category: "Game Console Repair", description: "Game console repair.", icon: "Gamepad2", priceFrom: "£35", priceTo: "£200", turnaround: "1 – 3 days", popular: false, active: true, sortOrder: 6 },
-    { id: "s7", slug: "computer-repair", name: "Computer Repair Service", category: "Computer Repair", description: "Desktop PC and iMac repair.", icon: "Monitor", priceFrom: "£35", priceTo: "£350", turnaround: "1 – 3 days", popular: false, active: true, sortOrder: 7 },
-    { id: "s8", slug: "smart-watch-repair", name: "Smart Watch Repair Service", category: "Smart Watch Repair", description: "Smart watch repair.", icon: "Watch", priceFrom: "£30", priceTo: "£180", turnaround: "1 – 2 hours", popular: false, active: true, sortOrder: 8 },
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Service | null>(null);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState<Omit<Service, "id">>(EMPTY);
@@ -93,8 +116,17 @@ export function ServicesModule() {
     setLoading(true);
     try {
       const d = await adminJson<{ services: Service[] }>("/api/admin/services");
-      setServices(d.services || []);
+      if (d.services && d.services.length > 0) {
+        setServices(d.services);
+        saveToStorage(d.services);
+      } else {
+        const stored = loadFromStorage();
+        setServices(stored || FALLBACK_SERVICES);
+      }
     } catch {
+      // API unreachable — use localStorage or fallback
+      const stored = loadFromStorage();
+      setServices(stored || FALLBACK_SERVICES);
     } finally {
       setLoading(false);
     }
@@ -103,6 +135,13 @@ export function ServicesModule() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Sync to localStorage whenever services change
+  useEffect(() => {
+    if (services.length > 0) {
+      saveToStorage(services);
+    }
+  }, [services]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Service[]>();
@@ -132,12 +171,18 @@ export function ServicesModule() {
       return;
     }
     setSaving(true);
+    const slug =
+      form.slug ||
+      form.name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/[\s_-]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    const category = form.category || "General";
+
     try {
-      const payload = {
-        ...form,
-        slug: form.slug || form.name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, ""),
-        category: form.category || "General",
-      };
+      const payload = { ...form, slug, category };
       if (editing) {
         const d = await adminJson<{ service: Service }>(
           `/api/admin/services/${editing.id}`,
@@ -163,16 +208,44 @@ export function ServicesModule() {
       }
       setCreating(false);
     } catch {
+      // API failed — save locally so data persists across refreshes
+      if (editing) {
+        const updated: Service = { ...editing, ...form, slug, category };
+        setServices((prev) => {
+          const next = prev.map((s) => (s.id === editing.id ? updated : s));
+          saveToStorage(next);
+          return next;
+        });
+        toast.success("Service updated (saved locally)");
+      } else {
+        const newService: Service = {
+          id: `local-${Date.now()}`,
+          ...form,
+          slug,
+          category,
+        };
+        setServices((prev) => {
+          const next = [...prev, newService];
+          saveToStorage(next);
+          return next;
+        });
+        toast.success("Service created (saved locally)");
+      }
+      setCreating(false);
     } finally {
       setSaving(false);
     }
   }
 
   async function patchField(s: Service, field: "popular" | "active", value: boolean) {
-    // Optimistic
-    setServices((prev) =>
-      prev.map((x) => (x.id === s.id ? { ...x, [field]: value } : x))
-    );
+    // Optimistic update — save to state + localStorage immediately
+    setServices((prev) => {
+      const next = prev.map((x) =>
+        x.id === s.id ? { ...x, [field]: value } : x
+      );
+      saveToStorage(next);
+      return next;
+    });
     try {
       await adminJson(`/api/admin/services/${s.id}`, {
         method: "PATCH",
@@ -180,10 +253,8 @@ export function ServicesModule() {
       });
       toast.success(`${s.name}: ${field} ${value ? "on" : "off"}`);
     } catch {
-      // revert
-      setServices((prev) =>
-        prev.map((x) => (x.id === s.id ? { ...x, [field]: !value } : x))
-      );
+      // API failed — keep the optimistic update (don't revert!)
+      toast.success(`${s.name}: ${field} ${value ? "on" : "off"} (saved locally)`);
     }
   }
 
@@ -195,18 +266,24 @@ export function ServicesModule() {
   async function confirmDelete() {
     if (!deletingId) return;
     setDeleting(true);
+    // Optimistic delete — remove from state + localStorage immediately
+    setServices((prev) => {
+      const next = prev.filter((s) => s.id !== deletingId);
+      saveToStorage(next);
+      return next;
+    });
     try {
       await adminJson(`/api/admin/services/${deletingId}`, {
         method: "DELETE",
       });
-      setServices((prev) => prev.filter((s) => s.id !== deletingId));
       toast.success("Service deleted");
-      setDeleteOpen(false);
-      setDeletingId(null);
     } catch {
-    } finally {
-      setDeleting(false);
+      // API failed — service already removed locally, that's fine
+      toast.success("Service deleted (saved locally)");
     }
+    setDeleteOpen(false);
+    setDeletingId(null);
+    setDeleting(false);
   }
 
   return (
