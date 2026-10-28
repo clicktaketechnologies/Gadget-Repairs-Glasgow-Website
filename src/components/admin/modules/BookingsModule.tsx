@@ -93,6 +93,7 @@ interface Booking {
 }
 
 const STORAGE_KEY = "grg-admin-bookings";
+const PUBLIC_KEY = "grg-public-bookings";
 
 const FALLBACK_BOOKINGS: Booking[] = [
   { id: "b1", ticketId: "GD-1024", customerName: "John Smith", email: "john@example.com", phone: "+44 7700 900100", deviceType: "Phone", deviceModel: "iPhone 14 Pro", issue: "Cracked screen", needsCollection: false, collectionAddr: null, status: "Pending", technicianNotes: null, quotedPrice: "£120", finalPrice: null, source: "online", bookingDate: "2025-10-21", bookingTime: "10:30", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
@@ -105,10 +106,22 @@ const FALLBACK_BOOKINGS: Booking[] = [
 function loadFromStorage(): Booking[] | null {
   if (typeof window === "undefined") return null;
   try {
+    // Read admin bookings
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    const adminBookings = raw ? JSON.parse(raw) : [];
+
+    // Also read public bookings (submitted via the website booking form)
+    const publicRaw = localStorage.getItem(PUBLIC_KEY);
+    const publicBookings = publicRaw ? JSON.parse(publicRaw) : [];
+
+    // Merge: public bookings first (most recent), then admin bookings (dedup by id)
+    const adminIds = new Set(adminBookings.map((b: any) => b.id));
+    const merged = [
+      ...publicBookings.filter((b: any) => !adminIds.has(b.id)),
+      ...adminBookings,
+    ];
+
+    if (Array.isArray(merged) && merged.length > 0) return merged;
     return null;
   } catch {
     return null;
@@ -118,7 +131,15 @@ function loadFromStorage(): Booking[] | null {
 function saveToStorage(bookings: Booking[]) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+    // Save admin bookings (exclude public ones by id prefix)
+    const adminOnly = bookings.filter((b) => !b.id.startsWith("local-") && !b.id.startsWith("public-"));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(adminOnly));
+
+    // Also update public bookings if any public bookings were modified
+    const publicBookings = bookings.filter((b) => b.id.startsWith("local-") || b.id.startsWith("public-"));
+    if (publicBookings.length > 0) {
+      localStorage.setItem(PUBLIC_KEY, JSON.stringify(publicBookings));
+    }
   } catch {}
 }
 

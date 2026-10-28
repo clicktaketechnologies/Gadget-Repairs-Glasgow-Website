@@ -56,11 +56,12 @@ const EMPTY = {
 };
 
 const STORAGE_KEY = "grg-admin-reviews";
+const PUBLIC_KEY = "grg-public-reviews";
 
 const FALLBACK_REVIEWS: Review[] = [
   { id: "r1", author: "Mark Thompson", rating: 5, comment: "Cracked iPhone 14 Pro screen replaced in 40 minutes. Best price in Glasgow!", device: "iPhone 14 Pro", source: "Google", approved: true, createdAt: "2025-10-15T10:00:00Z" },
   { id: "r2", author: "Sarah McLean", rating: 5, comment: "Samsung battery swapped same day. Friendly staff and honest advice.", device: "Samsung Galaxy S22", source: "Google", approved: true, createdAt: "2025-10-12T14:30:00Z" },
-  { id: "r3", author: "David Wilson", rating: 5, comment: "MacBook keyboard replaced for half what Apple quoted. Genuine part, 12-month warranty.", device: "MacBook Pro 2019", source: "Google", approved: true, createdAt: "2025-10-10T09:15:00Z" },
+  { id: "r3", author: "David Wilson", rating: 5, comment: "MacBook keyboard replaced for half what Apple quoted. Quality part, 30-day warranty.", device: "MacBook Pro 2019", source: "Google", approved: true, createdAt: "2025-10-10T09:15:00Z" },
   { id: "r4", author: "Aisha Rahman", rating: 5, comment: "Fixed my GHD straighteners in an hour for £25. Brilliant service!", device: "GHD Platinum+", source: "Walk-in", approved: true, createdAt: "2025-10-08T16:45:00Z" },
   { id: "r5", author: "New Customer", rating: 5, comment: "Great service, highly recommend!", device: "iPhone 15", source: "online", approved: false, createdAt: new Date().toISOString() },
 ];
@@ -68,10 +69,22 @@ const FALLBACK_REVIEWS: Review[] = [
 function loadFromStorage(): Review[] | null {
   if (typeof window === "undefined") return null;
   try {
+    // Read admin reviews
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    const adminReviews = raw ? JSON.parse(raw) : [];
+
+    // Also read public reviews (submitted via the website review form)
+    const publicRaw = localStorage.getItem(PUBLIC_KEY);
+    const publicReviews = publicRaw ? JSON.parse(publicRaw) : [];
+
+    // Merge: public reviews first (most recent), then admin reviews (dedup by id)
+    const adminIds = new Set(adminReviews.map((r: any) => r.id));
+    const merged = [
+      ...publicReviews.filter((r: any) => !adminIds.has(r.id)),
+      ...adminReviews,
+    ];
+
+    if (Array.isArray(merged) && merged.length > 0) return merged;
     return null;
   } catch {
     return null;
@@ -81,7 +94,15 @@ function loadFromStorage(): Review[] | null {
 function saveToStorage(reviews: Review[]) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
+    // Save admin reviews (exclude public ones by id prefix)
+    const adminOnly = reviews.filter((r) => !r.id.startsWith("local-"));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(adminOnly));
+
+    // Also update public reviews if any were modified
+    const publicReviews = reviews.filter((r) => r.id.startsWith("local-"));
+    if (publicReviews.length > 0) {
+      localStorage.setItem(PUBLIC_KEY, JSON.stringify(publicReviews));
+    }
   } catch {}
 }
 
