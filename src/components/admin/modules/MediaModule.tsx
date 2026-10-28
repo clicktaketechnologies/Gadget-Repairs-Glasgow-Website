@@ -54,12 +54,13 @@ function loadFromStorage(): MediaItem[] {
   }
 }
 
-function saveToStorage(items: MediaItem[]) {
-  if (typeof window === "undefined") return;
+function saveToStorage(items: MediaItem[]): boolean {
+  if (typeof window === "undefined") return false;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    return true;
   } catch (e) {
-    toast.error("Storage full — try removing larger files");
+    return false;
   }
 }
 
@@ -140,7 +141,10 @@ export function MediaModule() {
     if (newItems.length > 0) {
       setItems((prev) => {
         const next = [...newItems, ...prev];
-        saveToStorage(next);
+        const saved = saveToStorage(next);
+        if (!saved) {
+          toast.error("Storage full! Browser localStorage limit reached (usually ~5MB). Try smaller files or remove old media.");
+        }
         return next;
       });
       toast.success(`${newItems.length} file(s) uploaded to media library`);
@@ -200,7 +204,7 @@ export function MediaModule() {
             accept="image/*,video/*"
             multiple
             onChange={handleUpload}
-            className="hidden"
+            style={{ position: "absolute", width: 0, height: 0, opacity: 0, overflow: "hidden", zIndex: -1 }}
           />
           <Button
             onClick={() => fileInputRef.current?.click()}
