@@ -84,36 +84,46 @@ export function MediaModule() {
     const stored = loadFromStorage();
     setItems(stored);
     setLoading(false);
+    setHasLoaded(true);
   }, []);
 
-  // Sync to localStorage on every change
+  // Sync to localStorage on every change (skip initial load)
+  const [hasLoaded, setHasLoaded] = useState(false);
   useEffect(() => {
-    if (items.length >= 0) saveToStorage(items);
-  }, [items]);
+    if (hasLoaded && items.length >= 0) {
+      saveToStorage(items);
+    }
+  }, [items, hasLoaded]);
 
-  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0) {
+      return;
+    }
     setUploading(true);
 
+    const fileArray = Array.from(files);
     const newItems: MediaItem[] = [];
-    let processed = 0;
+    let successCount = 0;
+    let errorCount = 0;
 
-    Array.from(files).forEach((file) => {
-      // Check size (5MB for images, 10MB for videos)
+    for (const file of fileArray) {
       const isVideo = file.type.startsWith("video/");
       const maxSize = isVideo ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
       if (file.size > maxSize) {
         toast.error(`${file.name} is too large (max ${isVideo ? "10MB" : "5MB"})`);
-        processed++;
-        if (processed === files.length) finishUpload(newItems);
-        return;
+        errorCount++;
+        continue;
       }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        const category = isVideo ? "Videos" : "Images";
+      try {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("read error"));
+          reader.readAsDataURL(file);
+        });
+
         newItems.push({
           id: `media-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           name: file.name,
@@ -121,35 +131,40 @@ export function MediaModule() {
           dataUrl,
           size: file.size,
           createdAt: new Date().toISOString(),
-          category,
+          category: isVideo ? "Videos" : "Images",
         });
-        processed++;
-        if (processed === files.length) finishUpload(newItems);
-      };
-      reader.onerror = () => {
+        successCount++;
+      } catch {
         toast.error(`Failed to read ${file.name}`);
-        processed++;
-        if (processed === files.length) finishUpload(newItems);
-      };
-      reader.readAsDataURL(file);
-    });
+        errorCount++;
+      }
+    }
 
-    e.target.value = ""; // reset for re-upload
-  }
-
-  function finishUpload(newItems: MediaItem[]) {
     if (newItems.length > 0) {
+      // Add to state
       setItems((prev) => {
         const next = [...newItems, ...prev];
+        // Try to save — if it fails, remove the new items and warn
         const saved = saveToStorage(next);
         if (!saved) {
-          toast.error("Storage full! Browser localStorage limit reached (usually ~5MB). Try smaller files or remove old media.");
+          toast.error("Storage full! Browser localStorage limit (~5MB). Try smaller files.");
+          return prev; // don't add if we can't save
         }
         return next;
       });
-      toast.success(`${newItems.length} file(s) uploaded to media library`);
+
+      if (successCount > 0) {
+        toast.success(`${successCount} file(s) uploaded to media library`);
+      }
     }
+
+    if (errorCount > 0 && successCount === 0) {
+      toast.error("Upload failed. Check file size and try again.");
+    }
+
     setUploading(false);
+    // Reset input AFTER all processing is done
+    e.target.value = "";
   }
 
   function copyUrl(item: MediaItem) {
