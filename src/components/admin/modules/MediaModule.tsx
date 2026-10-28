@@ -78,6 +78,7 @@ export function MediaModule() {
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -88,7 +89,6 @@ export function MediaModule() {
   }, []);
 
   // Sync to localStorage on every change (skip initial load)
-  const [hasLoaded, setHasLoaded] = useState(false);
   useEffect(() => {
     if (hasLoaded && items.length >= 0) {
       saveToStorage(items);
