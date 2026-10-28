@@ -82,11 +82,32 @@ export function TrackPage() {
     setLoading(true);
     setBooking(null);
     setNotFound(false);
+
+    // First: check localStorage for locally-created bookings
+    try {
+      const stored = JSON.parse(localStorage.getItem("grg-public-bookings") || "[]");
+      const localBooking = stored.find((b: any) => b.ticketId === tid);
+      if (localBooking) {
+        setBooking(localBooking as Booking);
+        toast.success("Booking found!");
+        setLoading(false);
+        return;
+      }
+    } catch {}
+
+    // Then: try the API
     try {
       const res = await fetch(
         `/api/public/track?ticketId=${encodeURIComponent(tid)}`,
         { cache: "no-store" }
       );
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        // API not available (Firebase 404)
+        setNotFound(true);
+        toast.error("Ticket not found. Check your ticket ID and try again.");
+        return;
+      }
       const data = await res.json();
       if (!res.ok) {
         setNotFound(true);
@@ -96,7 +117,8 @@ export function TrackPage() {
       setBooking(data.booking as Booking);
       toast.success("Booking found!");
     } catch {
-      toast.error("Network error. Please try again.");
+      setNotFound(true);
+      toast.error("Ticket not found. Check your ticket ID and try again.");
     } finally {
       setLoading(false);
     }

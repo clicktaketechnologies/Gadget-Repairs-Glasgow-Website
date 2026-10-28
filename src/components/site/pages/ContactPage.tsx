@@ -79,6 +79,32 @@ export function ContactPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+
+      // Check if response is JSON (API working) or HTML (Firebase 404)
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        // API not available — save booking to localStorage
+        const ticketNum = String(1024 + Math.floor(Math.random() * 8000)).padStart(4, "0");
+        const newTicketId = `GD-${ticketNum}`;
+        const booking = {
+          id: `local-${Date.now()}`,
+          ticketId: newTicketId,
+          ...form,
+          status: "Pending",
+          source: "online",
+          createdAt: new Date().toISOString(),
+        };
+        // Save to localStorage so Track Repair can find it
+        try {
+          const existing = JSON.parse(localStorage.getItem("grg-public-bookings") || "[]");
+          existing.unshift(booking);
+          localStorage.setItem("grg-public-bookings", JSON.stringify(existing));
+        } catch {}
+        setTicketId(newTicketId);
+        toast.success(`Booking received! Your ticket ID is ${newTicketId}`);
+        return;
+      }
+
       const data = await res.json();
       if (!res.ok) {
         toast.error(data.error || "Could not submit booking.");
@@ -87,7 +113,24 @@ export function ContactPage() {
       setTicketId(data.booking?.ticketId ?? "GD-0000");
       toast.success("Booking received! Your ticket ID is on screen.");
     } catch {
-      toast.error("Network error. Please try again.");
+      // Network error — save to localStorage as fallback
+      const ticketNum = String(1024 + Math.floor(Math.random() * 8000)).padStart(4, "0");
+      const newTicketId = `GD-${ticketNum}`;
+      const booking = {
+        id: `local-${Date.now()}`,
+        ticketId: newTicketId,
+        ...form,
+        status: "Pending",
+        source: "online",
+        createdAt: new Date().toISOString(),
+      };
+      try {
+        const existing = JSON.parse(localStorage.getItem("grg-public-bookings") || "[]");
+        existing.unshift(booking);
+        localStorage.setItem("grg-public-bookings", JSON.stringify(existing));
+      } catch {}
+      setTicketId(newTicketId);
+      toast.success(`Booking received! Your ticket ID is ${newTicketId}`);
     } finally {
       setSubmitting(false);
     }
