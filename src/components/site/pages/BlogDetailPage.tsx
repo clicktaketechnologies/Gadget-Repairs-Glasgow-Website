@@ -15,6 +15,7 @@ import {
   Link2,
   ArrowRight,
   Wrench,
+  Newspaper,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -193,11 +194,17 @@ export function BlogDetailPage({ slug }: BlogDetailPageProps) {
       {/* Cover image hero */}
       <section className="relative">
         <div className="aspect-[16/9] sm:aspect-[21/9] lg:aspect-[21/8] w-full overflow-hidden bg-blue-900">
-          <img
-            src={post.coverImage}
-            alt={post.title}
-            className="w-full h-full object-cover opacity-90"
-          />
+          {post.coverImage ? (
+            <img
+              src={post.coverImage}
+              alt={post.title}
+              className="w-full h-full object-cover opacity-90"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <Newspaper className="h-16 w-16 text-white/30" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-blue-950/95 via-blue-950/40 to-blue-950/20" />
         </div>
         <div className="absolute inset-0 flex items-end">

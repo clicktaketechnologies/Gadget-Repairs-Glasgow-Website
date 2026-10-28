@@ -152,6 +152,62 @@ export function OverviewModule() {
 
   useEffect(() => {
     let active = true;
+
+    // First: try to build overview from localStorage bookings
+    try {
+      const adminBookings = JSON.parse(localStorage.getItem("grg-admin-bookings") || "[]");
+      const publicBookings = JSON.parse(localStorage.getItem("grg-public-bookings") || "[]");
+      const allBookings = [...publicBookings, ...adminBookings];
+
+      if (allBookings.length > 0) {
+        const pending = allBookings.filter((b: any) => b.status === "Pending").length;
+        const inProgress = allBookings.filter((b: any) => b.status === "In Progress").length;
+        const ready = allBookings.filter((b: any) => b.status === "Ready").length;
+        const completed = allBookings.filter((b: any) => b.status === "Completed").length;
+        let revenue = 0;
+        for (const b of allBookings) {
+          const m = (b.finalPrice || "").match(/£?([\d.]+)/);
+          if (m) revenue += parseFloat(m[1]);
+        }
+        const deviceMap: Record<string, number> = {};
+        for (const b of allBookings) deviceMap[b.deviceType] = (deviceMap[b.deviceType] || 0) + 1;
+        const deviceTypes = Object.entries(deviceMap).map(([name, value]) => ({ name, value }));
+
+        const trend = Array.from({ length: 14 }, (_, i) => {
+          const day = new Date(Date.now() - (13 - i) * 86400000);
+          const dayStr = day.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+          const dayBookings = allBookings.filter((b: any) => {
+            const bDate = new Date(b.createdAt);
+            return bDate.toDateString() === day.toDateString();
+          });
+          return {
+            date: dayStr,
+            Pending: dayBookings.filter((b: any) => b.status === "Pending").length,
+            "In Progress": dayBookings.filter((b: any) => b.status === "In Progress").length,
+            Ready: dayBookings.filter((b: any) => b.status === "Ready").length,
+            Completed: dayBookings.filter((b: any) => b.status === "Completed").length,
+          };
+        });
+
+        const localData: Overview = {
+          kpis: { total: allBookings.length, pending, inProgress, ready, completed, revenue: Math.round(revenue) },
+          trend,
+          deviceTypes,
+          recentBookings: allBookings.slice(0, 6),
+        };
+        if (active) {
+          Promise.resolve().then(() => {
+            if (active) {
+              setData(localData);
+              setError(null);
+              setLoading(false);
+            }
+          });
+        }
+      }
+    } catch {}
+
+    // Then: try the API for live data
     adminJson<Overview>("/api/admin/overview")
       .then((d) => {
         if (active) {
@@ -160,8 +216,7 @@ export function OverviewModule() {
         }
       })
       .catch(() => {
-        // Fallback to static data when API is unreachable
-        if (active) {
+        if (active && !data) {
           setData(FALLBACK_DATA);
           setError(null);
         }

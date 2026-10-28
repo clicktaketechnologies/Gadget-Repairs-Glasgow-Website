@@ -2,7 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, ArrowRight } from "lucide-react";
+import { ChevronRight, ArrowRight, Newspaper } from "lucide-react";
+
+// Fallback for broken images — hides the img and shows placeholder
+function handleImgError(e: React.SyntheticEvent<HTMLImageElement>) {
+  const img = e.currentTarget;
+  img.style.display = "none";
+  const parent = img.parentElement;
+  if (parent && !parent.querySelector(".img-fallback")) {
+    const div = document.createElement("div");
+    div.className = "img-fallback flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-50 to-orange-50";
+    div.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10l6 6v8a2 2 0 0 1-2 2Z"/><path d="M14 4v6h6"/></svg>';
+    parent.appendChild(div);
+  }
+}
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -130,11 +143,18 @@ export function BlogPage() {
             <Card className="overflow-hidden border-zinc-200 hover:shadow-xl transition-shadow group">
               <div className="grid lg:grid-cols-2">
                 <div className="aspect-[16/10] lg:aspect-auto overflow-hidden bg-zinc-100">
-                  <img
-                    src={featured.coverImage}
-                    alt={featured.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {featured.coverImage ? (
+                    <img
+                      src={featured.coverImage}
+                      alt={featured.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={handleImgError}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-50 to-orange-50">
+                      <Newspaper className="h-12 w-12 text-slate-300" />
+                    </div>
+                  )}
                 </div>
                 <CardContent className="p-5 sm:p-6 lg:p-8 flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -218,12 +238,18 @@ export function BlogPage() {
               <NavLink key={p.id} href={`/blog/${p.slug}`}>
                 <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow border-zinc-200 group">
                   <div className="aspect-[16/10] overflow-hidden bg-zinc-100">
-                    <img
-                      src={p.coverImage}
-                      alt={p.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
+                    {p.coverImage ? (
+                      <img
+                        src={p.coverImage}
+                        alt={p.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy" onError={handleImgError}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-50 to-orange-50">
+                        <Newspaper className="h-10 w-10 text-slate-300" />
+                      </div>
+                    )}
                   </div>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">

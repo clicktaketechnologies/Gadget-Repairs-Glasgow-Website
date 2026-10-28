@@ -1,0 +1,729 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useState } from "react";
+     4→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+     5→import { Button } from "@/components/ui/button";
+     6→import { Input } from "@/components/ui/input";
+     7→import { Label } from "@/components/ui/label";
+     8→import { Textarea } from "@/components/ui/textarea";
+     9→import { Switch } from "@/components/ui/switch";
+    10→import { Skeleton } from "@/components/ui/skeleton";
+    11→import { Badge } from "@/components/ui/badge";
+    12→import {
+    13→  Table,
+    14→  TableBody,
+    15→  TableCell,
+    16→  TableHead,
+    17→  TableHeader,
+    18→  TableRow,
+    19→} from "@/components/ui/table";
+    20→import {
+    21→  Dialog,
+    22→  DialogContent,
+    23→  DialogHeader,
+    24→  DialogTitle,
+    25→  DialogDescription,
+    26→  DialogFooter,
+    27→} from "@/components/ui/dialog";
+    28→import {
+    29→  AlertDialog,
+    30→  AlertDialogAction,
+    31→  AlertDialogCancel,
+    32→  AlertDialogContent,
+    33→  AlertDialogDescription,
+    34→  AlertDialogFooter,
+    35→  AlertDialogHeader,
+    36→  AlertDialogTitle,
+    37→} from "@/components/ui/alert-dialog";
+    38→import { adminJson } from "@/lib/admin-fetch";
+    39→import { slugify, fmtDate } from "@/lib/utils2";
+    40→import { Plus, Pencil, Trash2, Loader2, Save, Newspaper, Star, ImagePlus, Link2, X, Clock, CalendarClock } from "lucide-react";
+    41→import { toast } from "sonner";
+    42→
+    43→interface BlogPost {
+    44→  id: string;
+    45→  slug: string;
+    46→  title: string;
+    47→  excerpt: string;
+    48→  content: string;
+    49→  coverImage: string | null;
+    50→  category: string;
+    51→  tags: string | null;
+    52→  author: string;
+    53→  published: boolean;
+    54→  featured: boolean;
+    55→  createdAt: string;
+    56→  updatedAt: string;
+    57→  scheduledAt?: string | null;
+    58→}
+    59→
+    60→const EMPTY = {
+    61→  slug: "",
+    62→  title: "",
+    63→  excerpt: "",
+    64→  content: "",
+    65→  coverImage: "",
+    66→  category: "General",
+    67→  tags: "",
+    68→  author: "Gadget Repairs Glasgow",
+    69→  published: false,
+    70→  featured: false,
+    71→  scheduledAt: "",
+    72→};
+    73→
+    74→const STORAGE_KEY = "grg-admin-blog";
+    75→
+    76→const FALLBACK_POSTS: BlogPost[] = [
+    77→  { id: "p1", slug: "cracked-iphone-screen-glasgow-guide", title: "Cracked iPhone Screen in Glasgow? Complete Repair Guide", excerpt: "Everything you need to know about iPhone screen repair in Glasgow.", content: "# Cracked iPhone Screen\n\nCosts, turnaround times, and warranty info.", coverImage: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=800&q=80", category: "Mobile Repair", tags: "iPhone,screen repair", author: "Gadget Repairs Glasgow", published: true, featured: true, createdAt: "2025-10-20T10:00:00Z", updatedAt: "2025-10-20T10:00:00Z", scheduledAt: null },
+    78→  { id: "p2", slug: "macbook-repair-glasgow-guide", title: "MacBook Repair in Glasgow: Costs & What to Expect", excerpt: "MacBook not turning on? Here's everything Glasgow MacBook owners need to know.", content: "# MacBook Repair\n\nCommon issues and costs.", coverImage: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80", category: "MacBook Repair", tags: "MacBook,repair", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-19T10:00:00Z", updatedAt: "2025-10-19T10:00:00Z", scheduledAt: null },
+    79→  { id: "p3", slug: "ghd-straightener-repair-guide", title: "GHD Won't Heat? Common Faults & Repair Costs", excerpt: "GHD stopped working? Here's what's wrong and how much it costs to fix.", content: "# GHD Repair Guide\n\nCommon faults and costs.", coverImage: "https://images.unsplash.com/photo-1522335789203-aaa9cbb96e9d?w=800&q=80", category: "GHD Repair", tags: "GHD,straightener", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-18T10:00:00Z", updatedAt: "2025-10-18T10:00:00Z", scheduledAt: null },
+    80→  { id: "p4", slug: "ps5-xbox-hdmi-port-repair", title: "PS5/Xbox HDMI Port Broken? Console Repair Guide", excerpt: "No signal on your PS5 or Xbox? Here's how much console repair costs.", content: "# Console HDMI Repair\n\nCommon issues and costs.", coverImage: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80", category: "Game Console Repair", tags: "PS5,Xbox,HDMI", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-17T10:00:00Z", updatedAt: "2025-10-17T10:00:00Z", scheduledAt: null },
+    81→];
+    82→
+    83→function loadFromStorage(): BlogPost[] | null {
+    84→  if (typeof window === "undefined") return null;
+    85→  try {
+    86→    const raw = localStorage.getItem(STORAGE_KEY);
+    87→    if (!raw) return null;
+    88→    const parsed = JSON.parse(raw);
+    89→    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    90→    return null;
+    91→  } catch {
+    92→    return null;
+    93→  }
+    94→}
+    95→
+    96→function saveToStorage(posts: BlogPost[]) {
+    97→  if (typeof window === "undefined") return;
+    98→  try {
+    99→    localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+   100→  } catch {}
+   101→}
+   102→
+   103→export function BlogModule() {
+   104→  const [posts, setPosts] = useState<BlogPost[]>([]);
+   105→  const [loading, setLoading] = useState(true);
+   106→  const [editing, setEditing] = useState<BlogPost | null>(null);
+   107→  const [creating, setCreating] = useState(false);
+   108→  const [form, setForm] = useState(EMPTY);
+   109→  const [saving, setSaving] = useState(false);
+   110→  const [deleteOpen, setDeleteOpen] = useState(false);
+   111→  const [deletingId, setDeletingId] = useState<string | null>(null);
+   112→  const [deleting, setDeleting] = useState(false);
+   113→  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+   114→  const [imageUrl, setImageUrl] = useState("");
+   115→  const fileInputRef = useState<HTMLInputElement | null>(null);
+   116→
+   117→  function insertImageAtCursor(url: string) {
+   118→    const textarea = document.getElementById("bp-content") as HTMLTextAreaElement;
+   119→    if (!textarea) {
+   120→      // Fallback: append to end
+   121→      const mdImage = `\n\n![Image](${url})\n\n`;
+   122→      setForm((f) => ({ ...f, content: f.content + mdImage }));
+   123→      return;
+   124→    }
+   125→    const start = textarea.selectionStart;
+   126→    const end = textarea.selectionEnd;
+   127→    const before = form.content.substring(0, start);
+   128→    const after = form.content.substring(end);
+   129→    const mdImage = `\n\n![Image](${url})\n\n`;
+   130→    const newContent = before + mdImage + after;
+   131→    setForm({ ...form, content: newContent });
+   132→    // Restore cursor position after the inserted image
+   133→    setTimeout(() => {
+   134→      textarea.focus();
+   135→      const newPos = start + mdImage.length;
+   136→      textarea.setSelectionRange(newPos, newPos);
+   137→    }, 0);
+   138→  }
+   139→
+   140→  function handleImageUrlSubmit() {
+   141→    if (!imageUrl.trim()) {
+   142→      toast.error("Please enter an image URL");
+   143→      return;
+   144→    }
+   145→    insertImageAtCursor(imageUrl.trim());
+   146→    toast.success("Image inserted");
+   147→    setImageUrl("");
+   148→    setImagePickerOpen(false);
+   149→  }
+   150→
+   151→  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+   152→    const file = e.target.files?.[0];
+   153→    if (!file) return;
+   154→    if (file.size > 2 * 1024 * 1024) {
+   155→      toast.error("Image too large (max 2MB for inline). Use a URL for larger images.");
+   156→      return;
+   157→    }
+   158→    const reader = new FileReader();
+   159→    reader.onload = () => {
+   160→      const base64 = reader.result as string;
+   161→      insertImageAtCursor(base64);
+   162→      toast.success("Image inserted");
+   163→      setImagePickerOpen(false);
+   164→    };
+   165→    reader.onerror = () => toast.error("Failed to read image");
+   166→    reader.readAsDataURL(file);
+   167→  }
+   168→
+   169→  const load = useCallback(async () => {
+   170→    setLoading(true);
+   171→    try {
+   172→      const d = await adminJson<{ posts: BlogPost[] }>("/api/admin/blog");
+   173→      if (d.posts && d.posts.length > 0) {
+   174→        setPosts(d.posts);
+   175→        saveToStorage(d.posts);
+   176→      } else {
+   177→        // API returned empty — use localStorage or fallback
+   178→        const stored = loadFromStorage();
+   179→        setPosts(stored || FALLBACK_POSTS);
+   180→      }
+   181→    } catch {
+   182→      // API unreachable — use localStorage or fallback
+   183→      const stored = loadFromStorage();
+   184→      setPosts(stored || FALLBACK_POSTS);
+   185→    } finally {
+   186→      setLoading(false);
+   187→    }
+   188→  }, []);
+   189→
+   190→  useEffect(() => {
+   191→    load();
+   192→  }, [load]);
+   193→
+   194→  // Sync to localStorage whenever posts change
+   195→  useEffect(() => {
+   196→    if (posts.length > 0) {
+   197→      saveToStorage(posts);
+   198→    }
+   199→  }, [posts]);
+   200→
+   201→  function openCreate() {
+   202→    setForm(EMPTY);
+   203→    setEditing(null);
+   204→    setCreating(true);
+   205→  }
+   206→
+   207→  function openEdit(p: BlogPost) {
+   208→    setForm({
+   209→      slug: p.slug,
+   210→      title: p.title,
+   211→      excerpt: p.excerpt,
+   212→      content: p.content,
+   213→      coverImage: p.coverImage || "",
+   214→      category: p.category,
+   215→      tags: p.tags || "",
+   216→      author: p.author,
+   217→      published: p.published,
+   218→      featured: p.featured,
+   219→      scheduledAt: p.scheduledAt ? p.scheduledAt.slice(0, 16) : "",
+   220→    });
+   221→    setEditing(p);
+   222→    setCreating(true);
+   223→  }
+   224→
+   225→  async function save() {
+   226→    if (!form.title.trim()) {
+   227→      toast.error("Title is required");
+   228→      return;
+   229→    }
+   230→    setSaving(true);
+   231→    const slug = form.slug || slugify(form.title);
+   232→    const now = new Date().toISOString();
+   233→
+   234→    try {
+   235→      const payload = { ...form, slug };
+   236→      if (editing) {
+   237→        const d = await adminJson<{ post: BlogPost }>(
+   238→          `/api/admin/blog/${editing.id}`,
+   239→          { method: "PATCH", body: JSON.stringify(payload) }
+   240→        );
+   241→        setPosts((prev) => prev.map((p) => (p.id === d.post.id ? d.post : p)));
+   242→        toast.success("Post updated");
+   243→      } else {
+   244→        const d = await adminJson<{ post: BlogPost }>(
+   245→          "/api/admin/blog",
+   246→          { method: "POST", body: JSON.stringify(payload) }
+   247→        );
+   248→        setPosts((prev) => [d.post, ...prev]);
+   249→        toast.success("Post created");
+   250→      }
+   251→      setCreating(false);
+   252→    } catch {
+   253→      // API failed — save locally so data persists across refreshes
+   254→      if (editing) {
+   255→        const updated: BlogPost = {
+   256→          ...editing,
+   257→          ...form,
+   258→          slug,
+   259→          updatedAt: now,
+   260→          scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
+   261→        };
+   262→        setPosts((prev) => {
+   263→          const next = prev.map((p) => (p.id === editing.id ? updated : p));
+   264→          saveToStorage(next);
+   265→          return next;
+   266→        });
+   267→        toast.success("Post updated (saved locally)");
+   268→      } else {
+   269→        const newPost: BlogPost = {
+   270→          id: `local-${Date.now()}`,
+   271→          slug,
+   272→          title: form.title,
+   273→          excerpt: form.excerpt,
+   274→          content: form.content,
+   275→          coverImage: form.coverImage || null,
+   276→          category: form.category,
+   277→          tags: form.tags || null,
+   278→          author: form.author,
+   279→          published: form.published,
+   280→          featured: form.featured,
+   281→          createdAt: now,
+   282→          updatedAt: now,
+   283→          scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
+   284→        };
+   285→        setPosts((prev) => {
+   286→          const next = [newPost, ...prev];
+   287→          saveToStorage(next);
+   288→          return next;
+   289→        });
+   290→        toast.success("Post created (saved locally)");
+   291→      }
+   292→      setCreating(false);
+   293→    } finally {
+   294→      setSaving(false);
+   295→    }
+   296→  }
+   297→
+   298→  async function patchField(p: BlogPost, field: "published" | "featured", value: boolean) {
+   299→    // Optimistic update — save to state + localStorage immediately
+   300→    setPosts((prev) => {
+   301→      const next = prev.map((x) => (x.id === p.id ? { ...x, [field]: value, updatedAt: new Date().toISOString() } : x));
+   302→      saveToStorage(next);
+   303→      return next;
+   304→    });
+   305→    try {
+   306→      await adminJson(`/api/admin/blog/${p.id}`, {
+   307→        method: "PATCH",
+   308→        body: JSON.stringify({ [field]: value }),
+   309→      });
+   310→      toast.success(`${p.title}: ${field} ${value ? "on" : "off"}`);
+   311→    } catch {
+   312→      // API failed — keep the optimistic update (don't revert!)
+   313→      toast.success(`${p.title}: ${field} ${value ? "on" : "off"} (saved locally)`);
+   314→    }
+   315→  }
+   316→
+   317→  function openDelete(p: BlogPost) {
+   318→    setDeletingId(p.id);
+   319→    setDeleteOpen(true);
+   320→  }
+   321→
+   322→  async function confirmDelete() {
+   323→    if (!deletingId) return;
+   324→    setDeleting(true);
+   325→    // Optimistic delete — remove from state + localStorage immediately
+   326→    setPosts((prev) => {
+   327→      const next = prev.filter((p) => p.id !== deletingId);
+   328→      saveToStorage(next);
+   329→      return next;
+   330→    });
+   331→    try {
+   332→      await adminJson(`/api/admin/blog/${deletingId}`, {
+   333→        method: "DELETE",
+   334→      });
+   335→      toast.success("Post deleted");
+   336→    } catch {
+   337→      // API failed — post already removed locally, that's fine
+   338→      toast.success("Post deleted (saved locally)");
+   339→    }
+   340→    setDeleteOpen(false);
+   341→    setDeletingId(null);
+   342→    setDeleting(false);
+   343→  }
+   344→
+   345→  return (
+   346→    <div className="space-y-4">
+   347→      <div className="flex items-center justify-between">
+   348→        <p className="text-sm text-slate-600">
+   349→          {posts.length} blog posts ·{" "}
+   350→          {posts.filter((p) => p.published).length} published ·{" "}
+   351→          {posts.filter((p) => p.scheduledAt).length} scheduled
+   352→        </p>
+   353→        <Button onClick={openCreate} className="gap-2 bg-blue-900 hover:bg-blue-800">
+   354→          <Plus className="h-4 w-4" />
+   355→          New post
+   356→        </Button>
+   357→      </div>
+   358→
+   359→      {loading ? (
+   360→        <div className="space-y-3">
+   361→          {[1, 2, 3].map((i) => (
+   362→            <Skeleton key={i} className="h-20 w-full" />
+   363→          ))}
+   364→        </div>
+   365→      ) : posts.length === 0 ? (
+   366→        <Card>
+   367→          <CardContent className="py-12 text-center text-sm text-slate-500">
+   368→            No blog posts yet. Click "New post" to create one.
+   369→          </CardContent>
+   370→        </Card>
+   371→      ) : (
+   372→        <div className="overflow-x-auto rounded-lg border border-slate-200">
+   373→          <Table>
+   374→            <TableHeader>
+   375→              <TableRow>
+   376→                <TableHead className="w-16">Image</TableHead>
+   377→                <TableHead>Title</TableHead>
+   378→                <TableHead className="hidden sm:table-cell">Category</TableHead>
+   379→                <TableHead className="text-center">Published</TableHead>
+   380→                <TableHead className="text-center">Featured</TableHead>
+   381→                <TableHead className="hidden lg:table-cell">Scheduled</TableHead>
+   382→                <TableHead className="hidden md:table-cell">Date</TableHead>
+   383→                <TableHead className="text-right">Actions</TableHead>
+   384→              </TableRow>
+   385→            </TableHeader>
+   386→            <TableBody>
+   387→              {posts.map((p) => (
+   388→                <TableRow key={p.id}>
+   389→                  <TableCell>
+   390→                    {p.coverImage ? (
+   391→                      <img
+   392→                        src={p.coverImage}
+   393→                        alt=""
+   394→                        className="h-10 w-14 rounded object-cover"
+   395→                      />
+   396→                    ) : (
+   397→                      <div className="flex h-10 w-14 items-center justify-center rounded bg-slate-100">
+   398→                        <Newspaper className="h-4 w-4 text-slate-400" />
+   399→                      </div>
+   400→                    )}
+   401→                  </TableCell>
+   402→                  <TableCell className="font-medium max-w-xs">
+   403→                    <div className="truncate">{p.title}</div>
+   404→                    <div className="text-xs text-slate-400 truncate">/{p.slug}</div>
+   405→                  </TableCell>
+   406→                  <TableCell className="hidden sm:table-cell">
+   407→                    <Badge variant="outline">{p.category}</Badge>
+   408→                  </TableCell>
+   409→                  <TableCell className="text-center">
+   410→                    <Switch
+   411→                      checked={p.published}
+   412→                      onCheckedChange={(v) => patchField(p, "published", v)}
+   413→                    />
+   414→                  </TableCell>
+   415→                  <TableCell className="text-center">
+   416→                    <Switch
+   417→                      checked={p.featured}
+   418→                      onCheckedChange={(v) => patchField(p, "featured", v)}
+   419→                    />
+   420→                  </TableCell>
+   421→                  <TableCell className="hidden lg:table-cell text-xs">
+   422→                    {p.scheduledAt ? (
+   423→                      <div className="flex items-center gap-1.5">
+   424→                        <CalendarClock className="h-3.5 w-3.5 text-orange-500" />
+   425→                        <div>
+   426→                          <div className="font-medium text-orange-700">
+   427→                            {new Date(p.scheduledAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+   428→                          </div>
+   429→                          <div className="text-slate-400">
+   430→                            {new Date(p.scheduledAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+   431→                          </div>
+   432→                        </div>
+   433→                      </div>
+   434→                    ) : (
+   435→                      <span className="text-slate-300">—</span>
+   436→                    )}
+   437→                  </TableCell>
+   438→                  <TableCell className="hidden md:table-cell text-xs text-slate-500">
+   439→                    {fmtDate(p.createdAt)}
+   440→                  </TableCell>
+   441→                  <TableCell className="text-right">
+   442→                    <div className="flex justify-end gap-1">
+   443→                      <Button
+   444→                        variant="ghost"
+   445→                        size="sm"
+   446→                        onClick={() => openEdit(p)}
+   447→                        className="h-8 w-8 p-0"
+   448→                      >
+   449→                        <Pencil className="h-3.5 w-3.5" />
+   450→                      </Button>
+   451→                      <Button
+   452→                        variant="ghost"
+   453→                        size="sm"
+   454→                        onClick={() => openDelete(p)}
+   455→                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+   456→                      >
+   457→                        <Trash2 className="h-3.5 w-3.5" />
+   458→                      </Button>
+   459→                    </div>
+   460→                  </TableCell>
+   461→                </TableRow>
+   462→              ))}
+   463→            </TableBody>
+   464→          </Table>
+   465→        </div>
+   466→      )}
+   467→
+   468→      {/* Create / Edit Dialog */}
+   469→      <Dialog open={creating} onOpenChange={setCreating}>
+   470→        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+   471→          <DialogHeader>
+   472→            <DialogTitle>{editing ? "Edit Post" : "New Blog Post"}</DialogTitle>
+   473→            <DialogDescription>
+   474→              {editing ? "Update the blog post details." : "Create a new blog post."}
+   475→            </DialogDescription>
+   476→          </DialogHeader>
+   477→          <div className="space-y-4 py-2">
+   478→            <div className="space-y-2">
+   479→              <Label htmlFor="bp-title">Title *</Label>
+   480→              <Input
+   481→                id="bp-title"
+   482→                value={form.title}
+   483→                onChange={(e) => setForm({ ...form, title: e.target.value })}
+   484→                placeholder="Enter post title"
+   485→              />
+   486→            </div>
+   487→            <div className="grid grid-cols-2 gap-4">
+   488→              <div className="space-y-2">
+   489→                <Label htmlFor="bp-slug">Slug (optional)</Label>
+   490→                <Input
+   491→                  id="bp-slug"
+   492→                  value={form.slug}
+   493→                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+   494→                  placeholder="auto-generated from title"
+   495→                />
+   496→              </div>
+   497→              <div className="space-y-2">
+   498→                <Label htmlFor="bp-category">Category</Label>
+   499→                <Input
+   500→                  id="bp-category"
+   501→                  value={form.category}
+   502→                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+   503→                  placeholder="e.g. Mobile Repair"
+   504→                />
+   505→              </div>
+   506→            </div>
+   507→            <div className="space-y-2">
+   508→              <Label htmlFor="bp-excerpt">Excerpt</Label>
+   509→              <Input
+   510→                id="bp-excerpt"
+   511→                value={form.excerpt}
+   512→                onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+   513→                placeholder="Short summary shown in blog listing"
+   514→              />
+   515→            </div>
+   516→            <div className="space-y-2">
+   517→              <div className="flex items-center justify-between">
+   518→                <Label htmlFor="bp-content">Content (Markdown)</Label>
+   519→                <Button
+   520→                  type="button"
+   521→                  variant="outline"
+   522→                  size="sm"
+   523→                  className="gap-1.5 text-xs"
+   524→                  onClick={() => setImagePickerOpen(!imagePickerOpen)}
+   525→                >
+   526→                  <ImagePlus className="h-3.5 w-3.5" />
+   527→                  Insert Image
+   528→                </Button>
+   529→              </div>
+   530→              {imagePickerOpen && (
+   531→                <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-4 space-y-3">
+   532→                  <div className="flex items-center justify-between">
+   533→                    <p className="text-xs font-semibold text-blue-900">Insert Image Anywhere in Content</p>
+   534→                    <button
+   535→                      type="button"
+   536→                      onClick={() => setImagePickerOpen(false)}
+   537→                      className="text-slate-400 hover:text-slate-600"
+   538→                    >
+   539→                      <X className="h-4 w-4" />
+   540→                    </button>
+   541→                  </div>
+   542→                  <p className="text-[11px] text-slate-500">
+   543→                    Click in the content area where you want the image, then choose an option below:
+   544→                  </p>
+   545→                  {/* Option 1: Upload from device */}
+   546→                  <div className="space-y-1.5">
+   547→                    <Label className="text-xs font-medium text-slate-700">Upload from device (max 2MB)</Label>
+   548→                    <div className="flex items-center gap-2">
+   549→                      <input
+   550→                        ref={fileInputRef as any}
+   551→                        type="file"
+   552→                        accept="image/*"
+   553→                        onChange={handleFileUpload}
+   554→                        className="hidden"
+   555→                      />
+   556→                      <Button
+   557→                        type="button"
+   558→                        variant="outline"
+   559→                        size="sm"
+   560→                        className="gap-1.5"
+   561→                        onClick={() => (fileInputRef[0] as any)?.click()}
+   562→                      >
+   563→                        <ImagePlus className="h-3.5 w-3.5" />
+   564→                        Choose Image
+   565→                      </Button>
+   566→                      <span className="text-[11px] text-slate-400">JPG, PNG, GIF, WebP</span>
+   567→                    </div>
+   568→                  </div>
+   569→                  {/* Divider */}
+   570→                  <div className="flex items-center gap-2 py-1">
+   571→                    <div className="h-px flex-1 bg-slate-200" />
+   572→                    <span className="text-[10px] uppercase text-slate-400">or</span>
+   573→                    <div className="h-px flex-1 bg-slate-200" />
+   574→                  </div>
+   575→                  {/* Option 2: Paste URL */}
+   576→                  <div className="space-y-1.5">
+   577→                    <Label className="text-xs font-medium text-slate-700">Paste image URL</Label>
+   578→                    <div className="flex items-center gap-2">
+   579→                      <div className="relative flex-1">
+   580→                        <Link2 className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+   581→                        <Input
+   582→                          type="url"
+   583→                          value={imageUrl}
+   584→                          onChange={(e) => setImageUrl(e.target.value)}
+   585→                          placeholder="https://example.com/image.jpg"
+   586→                          className="h-8 pl-8 text-xs"
+   587→                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleImageUrlSubmit(); } }}
+   588→                        />
+   589→                      </div>
+   590→                      <Button
+   591→                        type="button"
+   592→                        size="sm"
+   593→                        className="h-8 gap-1.5 bg-blue-900 hover:bg-blue-800"
+   594→                        onClick={handleImageUrlSubmit}
+   595→                      >
+   596→                        Insert
+   597→                      </Button>
+   598→                    </div>
+   599→                  </div>
+   600→                </div>
+   601→              )}
+   602→              <Textarea
+   603→                id="bp-content"
+   604→                value={form.content}
+   605→                onChange={(e) => setForm({ ...form, content: e.target.value })}
+   606→                placeholder={"# Heading\n\nWrite your post content in markdown...\n\n![Image](https://example.com/photo.jpg)\n\nMore text here..."}
+   607→                rows={10}
+   608→                className="font-mono text-sm"
+   609→              />
+   610→              <p className="text-[11px] text-slate-400">
+   611→                Tip: Use <code className="rounded bg-slate-100 px-1">![Alt text](URL)</code> to add images anywhere in the content. Click "Insert Image" above for a visual picker.
+   612→              </p>
+   613→            </div>
+   614→            <div className="grid grid-cols-2 gap-4">
+   615→              <div className="space-y-2">
+   616→                <Label htmlFor="bp-cover">Cover Image URL</Label>
+   617→                <Input
+   618→                  id="bp-cover"
+   619→                  value={form.coverImage}
+   620→                  onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
+   621→                  placeholder="https://..."
+   622→                />
+   623→              </div>
+   624→              <div className="space-y-2">
+   625→                <Label htmlFor="bp-tags">Tags (comma-separated)</Label>
+   626→                <Input
+   627→                  id="bp-tags"
+   628→                  value={form.tags}
+   629→                  onChange={(e) => setForm({ ...form, tags: e.target.value })}
+   630→                  placeholder="iPhone, screen, repair"
+   631→                />
+   632→              </div>
+   633→            </div>
+   634→            <div className="flex items-center gap-6">
+   635→              <div className="flex items-center gap-2">
+   636→                <Switch
+   637→                  id="bp-published"
+   638→                  checked={form.published}
+   639→                  onCheckedChange={(v) => setForm({ ...form, published: v })}
+   640→                />
+   641→                <Label htmlFor="bp-published">Published</Label>
+   642→              </div>
+   643→              <div className="flex items-center gap-2">
+   644→                <Switch
+   645→                  id="bp-featured"
+   646→                  checked={form.featured}
+   647→                  onCheckedChange={(v) => setForm({ ...form, featured: v })}
+   648→                />
+   649→                <Label htmlFor="bp-featured">Featured</Label>
+   650→              </div>
+   651→            </div>
+   652→            {/* Schedule post */}
+   653→            <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-4 space-y-2">
+   654→              <div className="flex items-center gap-2">
+   655→                <Clock className="h-4 w-4 text-blue-600" />
+   656→                <Label htmlFor="bp-scheduled" className="text-sm font-semibold text-blue-900">
+   657→                  Schedule Post
+   658→                </Label>
+   659→              </div>
+   660→              <p className="text-[11px] text-slate-500">
+   661→                Select a date and time to automatically publish this post. Leave empty to publish immediately (when Published toggle is on).
+   662→              </p>
+   663→              <div className="flex items-center gap-2">
+   664→                <Input
+   665→                  id="bp-scheduled"
+   666→                  type="datetime-local"
+   667→                  value={form.scheduledAt}
+   668→                  onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })}
+   669→                  className="max-w-xs"
+   670→                />
+   671→                {form.scheduledAt && (
+   672→                  <Button
+   673→                    type="button"
+   674→                    variant="ghost"
+   675→                    size="sm"
+   676→                    className="text-xs"
+   677→                    onClick={() => setForm({ ...form, scheduledAt: "" })}
+   678→                  >
+   679→                    <X className="h-3 w-3" /> Clear
+   680→                  </Button>
+   681→                )}
+   682→              </div>
+   683→              {form.scheduledAt && (
+   684→                <p className="text-[11px] font-medium text-blue-700">
+   685→                  Will publish on: {new Date(form.scheduledAt).toLocaleString("en-GB", {
+   686→                    weekday: "long", day: "numeric", month: "long", year: "numeric",
+   687→                    hour: "2-digit", minute: "2-digit"
+   688→                  })}
+   689→                </p>
+   690→              )}
+   691→            </div>
+   692→          </div>
+   693→          <DialogFooter>
+   694→            <Button variant="outline" onClick={() => setCreating(false)}>
+   695→              Cancel
+   696→            </Button>
+   697→            <Button onClick={save} disabled={saving} className="gap-2 bg-blue-900 hover:bg-blue-800">
+   698→              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+   699→              {editing ? "Update" : "Create"}
+   700→            </Button>
+   701→          </DialogFooter>
+   702→        </DialogContent>
+   703→      </Dialog>
+   704→
+   705→      {/* Delete confirmation */}
+   706→      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+   707→        <AlertDialogContent>
+   708→          <AlertDialogHeader>
+   709→            <AlertDialogTitle>Delete this post?</AlertDialogTitle>
+   710→            <AlertDialogDescription>
+   711→              This action cannot be undone. The post will be permanently removed.
+   712→            </AlertDialogDescription>
+   713→          </AlertDialogHeader>
+   714→          <AlertDialogFooter>
+   715→            <AlertDialogCancel>Cancel</AlertDialogCancel>
+   716→            <AlertDialogAction
+   717→              onClick={confirmDelete}
+   718→              className="bg-red-600 hover:bg-red-700"
+   719→              disabled={deleting}
+   720→            >
+   721→              {deleting ? "Deleting…" : "Delete"}
+   722→            </AlertDialogAction>
+   723→          </AlertDialogFooter>
+   724→        </AlertDialogContent>
+   725→      </AlertDialog>
+   726→    </div>
+   727→  );
+   728→}
+   729→

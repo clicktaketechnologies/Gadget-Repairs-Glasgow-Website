@@ -343,7 +343,7 @@ export const STATIC_POSTS = [
     content:
       "# GHD Repair Guide\n\n## Common Faults\n- Won't heat up (thermal fuse)\n- Flashing red light\n- Broken cable\n\n## Cost: £20–£60",
     coverImage:
-      "https://images.unsplash.com/photo-1522335789203-aaa9cbb96e9d?w=800&q=80",
+      "https://images.unsplash.com/photo-1599387737858-6f3b8c8e1e1e?w=800&q=80",
     category: "GHD Repair",
     tags: "GHD,straightener",
     author: "Gadget Repairs Glasgow",

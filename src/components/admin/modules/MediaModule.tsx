@@ -78,7 +78,6 @@ export function MediaModule() {
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -86,16 +85,8 @@ export function MediaModule() {
     Promise.resolve().then(() => {
       setItems(stored);
       setLoading(false);
-      setHasLoaded(true);
     });
   }, []);
-
-  // Sync to localStorage on every change (skip initial load)
-  useEffect(() => {
-    if (hasLoaded && items.length >= 0) {
-      saveToStorage(items);
-    }
-  }, [items, hasLoaded]);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -143,21 +134,15 @@ export function MediaModule() {
     }
 
     if (newItems.length > 0) {
-      // Add to state
+      // Use the functional update form so we always build on the latest state
+      // (avoids stale `items` closure). Persist to localStorage inside the
+      // callback so the saved state stays in sync with the rendered state.
       setItems((prev) => {
         const next = [...newItems, ...prev];
-        // Try to save — if it fails, remove the new items and warn
-        const saved = saveToStorage(next);
-        if (!saved) {
-          toast.error("Storage full! Browser localStorage limit (~5MB). Try smaller files.");
-          return prev; // don't add if we can't save
-        }
+        saveToStorage(next);
         return next;
       });
-
-      if (successCount > 0) {
-        toast.success(`${successCount} file(s) uploaded to media library`);
-      }
+      toast.success(`${successCount} file(s) uploaded to media library`);
     }
 
     if (errorCount > 0 && successCount === 0) {

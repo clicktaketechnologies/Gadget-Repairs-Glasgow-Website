@@ -1,0 +1,702 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useMemo, useState } from "react";
+     4→import { Input } from "@/components/ui/input";
+     5→import { Button } from "@/components/ui/button";
+     6→import { Label } from "@/components/ui/label";
+     7→import { Textarea } from "@/components/ui/textarea";
+     8→import { Skeleton } from "@/components/ui/skeleton";
+     9→import { Badge } from "@/components/ui/badge";
+    10→import {
+    11→  Card,
+    12→  CardContent,
+    13→  CardHeader,
+    14→  CardTitle,
+    15→} from "@/components/ui/card";
+    16→import {
+    17→  Table,
+    18→  TableBody,
+    19→  TableCell,
+    20→  TableHead,
+    21→  TableHeader,
+    22→  TableRow,
+    23→} from "@/components/ui/table";
+    24→import {
+    25→  Dialog,
+    26→  DialogContent,
+    27→  DialogHeader,
+    28→  DialogTitle,
+    29→  DialogDescription,
+    30→  DialogFooter,
+    31→} from "@/components/ui/dialog";
+    32→import {
+    33→  Select,
+    34→  SelectContent,
+    35→  SelectItem,
+    36→  SelectTrigger,
+    37→  SelectValue,
+    38→} from "@/components/ui/select";
+    39→import {
+    40→  AlertDialog,
+    41→  AlertDialogAction,
+    42→  AlertDialogCancel,
+    43→  AlertDialogContent,
+    44→  AlertDialogDescription,
+    45→  AlertDialogFooter,
+    46→  AlertDialogHeader,
+    47→  AlertDialogTitle,
+    48→} from "@/components/ui/alert-dialog";
+    49→import { StatusBadge } from "@/components/admin/StatusBadge";
+    50→import { adminJson } from "@/lib/admin-fetch";
+    51→import { fmtDateTime } from "@/lib/utils2";
+    52→import {
+    53→  Search,
+    54→  Download,
+    55→  Eye,
+    56→  Trash2,
+    57→  Save,
+    58→  Mail,
+    59→  Loader2,
+    60→  Inbox,
+    61→} from "lucide-react";
+    62→import { toast } from "sonner";
+    63→
+    64→const STATUS_OPTIONS = [
+    65→  "all",
+    66→  "Pending",
+    67→  "In Progress",
+    68→  "Ready",
+    69→  "Completed",
+    70→  "Cancelled",
+    71→];
+    72→
+    73→interface Booking {
+    74→  id: string;
+    75→  ticketId: string;
+    76→  customerName: string;
+    77→  email: string;
+    78→  phone: string;
+    79→  deviceType: string;
+    80→  deviceModel: string;
+    81→  issue: string;
+    82→  needsCollection: boolean;
+    83→  collectionAddr: string | null;
+    84→  status: string;
+    85→  technicianNotes: string | null;
+    86→  quotedPrice: string | null;
+    87→  finalPrice: string | null;
+    88→  source: string;
+    89→  bookingDate: string | null;
+    90→  bookingTime: string | null;
+    91→  createdAt: string;
+    92→  updatedAt?: string;
+    93→}
+    94→
+    95→const STORAGE_KEY = "grg-admin-bookings";
+    96→const PUBLIC_KEY = "grg-public-bookings";
+    97→
+    98→const FALLBACK_BOOKINGS: Booking[] = [
+    99→  { id: "b1", ticketId: "GD-1024", customerName: "John Smith", email: "john@example.com", phone: "+44 7700 900100", deviceType: "Phone", deviceModel: "iPhone 14 Pro", issue: "Cracked screen", needsCollection: false, collectionAddr: null, status: "Pending", technicianNotes: null, quotedPrice: "£120", finalPrice: null, source: "online", bookingDate: "2025-10-21", bookingTime: "10:30", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+   100→  { id: "b2", ticketId: "GD-1025", customerName: "Sarah McLean", email: "sarah@example.com", phone: "+44 7700 900101", deviceType: "Phone", deviceModel: "Samsung S22", issue: "Battery replacement", needsCollection: false, collectionAddr: null, status: "In Progress", technicianNotes: "Battery ordered", quotedPrice: "£60", finalPrice: null, source: "walk-in", bookingDate: "2025-10-20", bookingTime: "14:00", createdAt: new Date(Date.now() - 86400000).toISOString(), updatedAt: new Date(Date.now() - 86400000).toISOString() },
+   101→  { id: "b3", ticketId: "GD-1026", customerName: "David Wilson", email: "david@example.com", phone: "+44 7700 900102", deviceType: "Laptop", deviceModel: "MacBook Pro 2019", issue: "Keyboard failure", needsCollection: false, collectionAddr: null, status: "Completed", technicianNotes: "Replaced top case", quotedPrice: "£180", finalPrice: "£180", source: "online", bookingDate: "2025-10-19", bookingTime: "11:00", createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 2 * 86400000).toISOString() },
+   102→  { id: "b4", ticketId: "GD-1027", customerName: "Aisha Rahman", email: "aisha@example.com", phone: "+44 7700 900103", deviceType: "GHD", deviceModel: "GHD Platinum+", issue: "Won't heat", needsCollection: false, collectionAddr: null, status: "Ready", technicianNotes: "Thermal fuse replaced", quotedPrice: "£25", finalPrice: "£25", source: "walk-in", bookingDate: "2025-10-18", bookingTime: "15:00", createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 3 * 86400000).toISOString() },
+   103→  { id: "b5", ticketId: "GD-1028", customerName: "James O'Brien", email: "james@example.com", phone: "+44 7700 900104", deviceType: "Console", deviceModel: "PlayStation 5", issue: "HDMI port broken", needsCollection: false, collectionAddr: null, status: "Completed", technicianNotes: "HDMI port resoldered", quotedPrice: "£100", finalPrice: "£100", source: "online", bookingDate: "2025-10-17", bookingTime: "09:30", createdAt: new Date(Date.now() - 4 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 4 * 86400000).toISOString() },
+   104→];
+   105→
+   106→function loadFromStorage(): Booking[] | null {
+   107→  if (typeof window === "undefined") return null;
+   108→  try {
+   109→    // Read admin bookings
+   110→    const raw = localStorage.getItem(STORAGE_KEY);
+   111→    const adminBookings = raw ? JSON.parse(raw) : [];
+   112→
+   113→    // Also read public bookings (submitted via the website booking form)
+   114→    const publicRaw = localStorage.getItem(PUBLIC_KEY);
+   115→    const publicBookings = publicRaw ? JSON.parse(publicRaw) : [];
+   116→
+   117→    // Merge: public bookings first (most recent), then admin bookings (dedup by id)
+   118→    const adminIds = new Set(adminBookings.map((b: any) => b.id));
+   119→    const merged = [
+   120→      ...publicBookings.filter((b: any) => !adminIds.has(b.id)),
+   121→      ...adminBookings,
+   122→    ];
+   123→
+   124→    if (Array.isArray(merged) && merged.length > 0) return merged;
+   125→    return null;
+   126→  } catch {
+   127→    return null;
+   128→  }
+   129→}
+   130→
+   131→function saveToStorage(bookings: Booking[]) {
+   132→  if (typeof window === "undefined") return;
+   133→  try {
+   134→    // Save admin bookings (exclude public ones by id prefix)
+   135→    const adminOnly = bookings.filter((b) => !b.id.startsWith("local-") && !b.id.startsWith("public-"));
+   136→    localStorage.setItem(STORAGE_KEY, JSON.stringify(adminOnly));
+   137→
+   138→    // Also update public bookings if any public bookings were modified
+   139→    const publicBookings = bookings.filter((b) => b.id.startsWith("local-") || b.id.startsWith("public-"));
+   140→    if (publicBookings.length > 0) {
+   141→      localStorage.setItem(PUBLIC_KEY, JSON.stringify(publicBookings));
+   142→    }
+   143→  } catch {}
+   144→}
+   145→
+   146→export function BookingsModule() {
+   147→  const [bookings, setBookings] = useState<Booking[]>([]);
+   148→  const [loading, setLoading] = useState(true);
+   149→  const [q, setQ] = useState("");
+   150→  const [status, setStatus] = useState<string>("all");
+   151→  const [selected, setSelected] = useState<Booking | null>(null);
+   152→  const [detailOpen, setDetailOpen] = useState(false);
+   153→  const [saving, setSaving] = useState(false);
+   154→  const [deleteOpen, setDeleteOpen] = useState(false);
+   155→  const [deleting, setDeleting] = useState(false);
+   156→  const [replyOpen, setReplyOpen] = useState(false);
+   157→  const [sending, setSending] = useState(false);
+   158→
+   159→  // Editable form fields
+   160→  const [editStatus, setEditStatus] = useState<string>("Pending");
+   161→  const [editNotes, setEditNotes] = useState("");
+   162→  const [editQuoted, setEditQuoted] = useState("");
+   163→  const [editFinal, setEditFinal] = useState("");
+   164→  const [replySubject, setReplySubject] = useState("");
+   165→  const [replyBody, setReplyBody] = useState("");
+   166→
+   167→  const load = useCallback(async () => {
+   168→    setLoading(true);
+   169→    try {
+   170→      const params = new URLSearchParams();
+   171→      if (q) params.set("q", q);
+   172→      if (status !== "all") params.set("status", status);
+   173→      const data = await adminJson<{ bookings: Booking[] }>(
+   174→        `/api/admin/bookings?${params.toString()}`
+   175→      );
+   176→      if (data.bookings && data.bookings.length > 0) {
+   177→        setBookings(data.bookings);
+   178→        saveToStorage(data.bookings);
+   179→      } else {
+   180→        const stored = loadFromStorage();
+   181→        setBookings(stored || FALLBACK_BOOKINGS);
+   182→      }
+   183→    } catch {
+   184→      // API unreachable — use localStorage or fallback
+   185→      const stored = loadFromStorage();
+   186→      setBookings(stored || FALLBACK_BOOKINGS);
+   187→    } finally {
+   188→      setLoading(false);
+   189→    }
+   190→  }, [q, status]);
+   191→
+   192→  useEffect(() => {
+   193→    const t = setTimeout(load, 250);
+   194→    return () => clearTimeout(t);
+   195→  }, [load]);
+   196→
+   197→  // Reload when window regains focus (e.g. user switches from public site to admin)
+   198→  useEffect(() => {
+   199→    const onFocus = () => load();
+   200→    window.addEventListener("focus", onFocus);
+   201→    return () => window.removeEventListener("focus", onFocus);
+   202→  }, [load]);
+   203→
+   204→  function openDetail(b: Booking) {
+   205→    setSelected(b);
+   206→    setEditStatus(b.status);
+   207→    setEditNotes(b.technicianNotes || "");
+   208→    setEditQuoted(b.quotedPrice || "");
+   209→    setEditFinal(b.finalPrice || "");
+   210→    setDetailOpen(true);
+   211→  }
+   212→
+   213→  async function saveBooking() {
+   214→    if (!selected) return;
+   215→    setSaving(true);
+   216→    const now = new Date().toISOString();
+   217→    try {
+   218→      const data = await adminJson<{ booking: Booking }>(
+   219→        `/api/admin/bookings/${selected.id}`,
+   220→        {
+   221→          method: "PATCH",
+   222→          body: JSON.stringify({
+   223→            status: editStatus,
+   224→            technicianNotes: editNotes || null,
+   225→            quotedPrice: editQuoted || null,
+   226→            finalPrice: editFinal || null,
+   227→          }),
+   228→        }
+   229→      );
+   230→      setBookings((prev) =>
+   231→        prev.map((b) => (b.id === data.booking.id ? data.booking : b))
+   232→      );
+   233→      setSelected(data.booking);
+   234→      toast.success("Booking updated");
+   235→    } catch {
+   236→      // API failed — save locally so data persists across refreshes
+   237→      const updated: Booking = {
+   238→        ...selected,
+   239→        status: editStatus,
+   240→        technicianNotes: editNotes || null,
+   241→        quotedPrice: editQuoted || null,
+   242→        finalPrice: editFinal || null,
+   243→        updatedAt: now,
+   244→      };
+   245→      setBookings((prev) => {
+   246→        const next = prev.map((b) => (b.id === updated.id ? updated : b));
+   247→        saveToStorage(next);
+   248→        return next;
+   249→      });
+   250→      setSelected(updated);
+   251→      toast.success("Booking updated (saved locally)");
+   252→    } finally {
+   253→      setSaving(false);
+   254→    }
+   255→  }
+   256→
+   257→  function openDelete() {
+   258→    setDeleteOpen(true);
+   259→  }
+   260→
+   261→  async function confirmDelete() {
+   262→    if (!selected) return;
+   263→    setDeleting(true);
+   264→    const idToDelete = selected.id;
+   265→    // Optimistic delete — remove from state + localStorage immediately
+   266→    setBookings((prev) => {
+   267→      const next = prev.filter((b) => b.id !== idToDelete);
+   268→      saveToStorage(next);
+   269→      return next;
+   270→    });
+   271→    try {
+   272→      await adminJson(`/api/admin/bookings/${idToDelete}`, {
+   273→        method: "DELETE",
+   274→      });
+   275→      toast.success("Booking deleted");
+   276→    } catch {
+   277→      // API failed — booking already removed locally, that's fine
+   278→      toast.success("Booking deleted (saved locally)");
+   279→    }
+   280→    setDeleteOpen(false);
+   281→    setDetailOpen(false);
+   282→    setSelected(null);
+   283→    setDeleting(false);
+   284→  }
+   285→
+   286→  function openReply() {
+   287→    if (!selected) return;
+   288→    setReplySubject(`Update on your repair ${selected.ticketId}`);
+   289→    setReplyBody(
+   290→      `Hi ${selected.customerName},\n\nUpdate on your ${selected.deviceType} repair (ticket ${selected.ticketId}):\n\n[Type your update here]\n\nMany thanks,\nGadget Repairs Glasgow`
+   291→    );
+   292→    setReplyOpen(true);
+   293→  }
+   294→
+   295→  async function sendReply() {
+   296→    if (!selected) return;
+   297→    setSending(true);
+   298→    try {
+   299→      const data = await adminJson<{ status: string; message: string }>(
+   300→        `/api/admin/sent-emails`,
+   301→        {
+   302→          method: "POST",
+   303→          body: JSON.stringify({
+   304→            bookingId: selected.id,
+   305→            subject: replySubject,
+   306→            body: replyBody,
+   307→          }),
+   308→        }
+   309→      );
+   310→      toast.success(data.message || "Email handled");
+   311→      setReplyOpen(false);
+   312→    } catch {
+   313→    } finally {
+   314→      setSending(false);
+   315→    }
+   316→  }
+   317→
+   318→  function exportCsv() {
+   319→    const rows = [
+   320→      [
+   321→        "ticketId",
+   322→        "customerName",
+   323→        "email",
+   324→        "phone",
+   325→        "deviceType",
+   326→        "deviceModel",
+   327→        "issue",
+   328→        "status",
+   329→        "quotedPrice",
+   330→        "finalPrice",
+   331→        "source",
+   332→        "createdAt",
+   333→      ],
+   334→      ...bookings.map((b) => [
+   335→        b.ticketId,
+   336→        b.customerName,
+   337→        b.email,
+   338→        b.phone,
+   339→        b.deviceType,
+   340→        b.deviceModel,
+   341→        (b.issue || "").replace(/"/g, '""'),
+   342→        b.status,
+   343→        b.quotedPrice || "",
+   344→        b.finalPrice || "",
+   345→        b.source,
+   346→        b.createdAt,
+   347→      ]),
+   348→    ];
+   349→    const csv = rows
+   350→      .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
+   351→      .join("\n");
+   352→    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+   353→    const url = URL.createObjectURL(blob);
+   354→    const a = document.createElement("a");
+   355→    a.href = url;
+   356→    a.download = `bookings-${new Date().toISOString().split("T")[0]}.csv`;
+   357→    a.click();
+   358→    URL.revokeObjectURL(url);
+   359→    toast.success(`Exported ${bookings.length} bookings`);
+   360→  }
+   361→
+   362→  return (
+   363→    <div className="space-y-4">
+   364→      {/* Toolbar */}
+   365→      <Card>
+   366→        <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center">
+   367→          <div className="relative flex-1">
+   368→            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   369→            <Input
+   370→              placeholder="Search ticket, customer, email, phone, device, issue…"
+   371→              value={q}
+   372→              onChange={(e) => setQ(e.target.value)}
+   373→              className="pl-9"
+   374→            />
+   375→          </div>
+   376→          <Select value={status} onValueChange={setStatus}>
+   377→            <SelectTrigger className="w-full sm:w-44">
+   378→              <SelectValue placeholder="Status" />
+   379→            </SelectTrigger>
+   380→            <SelectContent>
+   381→              {STATUS_OPTIONS.map((s) => (
+   382→                <SelectItem key={s} value={s}>
+   383→                  {s === "all" ? "All statuses" : s}
+   384→                </SelectItem>
+   385→              ))}
+   386→            </SelectContent>
+   387→          </Select>
+   388→          <Button
+   389→            variant="outline"
+   390→            onClick={exportCsv}
+   391→            disabled={!bookings.length}
+   392→            className="gap-2"
+   393→          >
+   394→            <Download className="h-4 w-4" />
+   395→            CSV
+   396→          </Button>
+   397→        </CardContent>
+   398→      </Card>
+   399→
+   400→      {/* Table */}
+   401→      <Card>
+   402→        <CardHeader className="border-b py-4">
+   403→          <CardTitle className="flex items-center justify-between text-base">
+   404→            <span>Bookings</span>
+   405→            <span className="text-xs font-normal text-slate-500">
+   406→              {bookings.length} shown
+   407→            </span>
+   408→          </CardTitle>
+   409→        </CardHeader>
+   410→        <CardContent className="px-0 pt-0">
+   411→          {loading ? (
+   412→            <div className="space-y-2 p-4">
+   413→              {Array.from({ length: 6 }).map((_, i) => (
+   414→                <Skeleton key={i} className="h-12 w-full" />
+   415→              ))}
+   416→            </div>
+   417→          ) : bookings.length === 0 ? (
+   418→            <div className="flex flex-col items-center justify-center gap-2 py-16 text-slate-500">
+   419→              <Inbox className="h-10 w-10 text-slate-300" />
+   420→              <p className="text-sm">No bookings match your filters.</p>
+   421→            </div>
+   422→          ) : (
+   423→            <Table>
+   424→              <TableHeader>
+   425→                <TableRow>
+   426→                  <TableHead>Ticket</TableHead>
+   427→                  <TableHead>Customer</TableHead>
+   428→                  <TableHead className="hidden md:table-cell">Device</TableHead>
+   429→                  <TableHead className="hidden lg:table-cell">Issue</TableHead>
+   430→                  <TableHead>Status</TableHead>
+   431→                  <TableHead className="hidden sm:table-cell">Source</TableHead>
+   432→                  <TableHead className="hidden md:table-cell">Date</TableHead>
+   433→                  <TableHead className="text-right">Actions</TableHead>
+   434→                </TableRow>
+   435→              </TableHeader>
+   436→              <TableBody>
+   437→                {bookings.map((b) => (
+   438→                  <TableRow key={b.id}>
+   439→                    <TableCell className="font-mono text-xs font-semibold text-blue-900">
+   440→                      {b.ticketId}
+   441→                    </TableCell>
+   442→                    <TableCell>
+   443→                      <div className="font-medium text-slate-900">
+   444→                        {b.customerName}
+   445→                      </div>
+   446→                      <div className="text-xs text-slate-500">{b.phone || b.email}</div>
+   447→                    </TableCell>
+   448→                    <TableCell className="hidden md:table-cell">
+   449→                      <div className="text-sm">{b.deviceType}</div>
+   450→                      <div className="text-xs text-slate-500">
+   451→                        {b.deviceModel}
+   452→                      </div>
+   453→                    </TableCell>
+   454→                    <TableCell className="hidden max-w-xs lg:table-cell">
+   455→                      <div className="truncate text-xs text-slate-600">
+   456→                        {b.issue}
+   457→                      </div>
+   458→                    </TableCell>
+   459→                    <TableCell>
+   460→                      <StatusBadge status={b.status} />
+   461→                    </TableCell>
+   462→                    <TableCell className="hidden sm:table-cell">
+   463→                      <Badge variant="outline" className="text-[10px]">
+   464→                        {b.source}
+   465→                      </Badge>
+   466→                    </TableCell>
+   467→                    <TableCell className="hidden md:table-cell text-xs text-slate-600">
+   468→                      {b.createdAt ? fmtDateTime(b.createdAt) : "—"}
+   469→                    </TableCell>
+   470→                    <TableCell className="text-right">
+   471→                      <Button
+   472→                        size="sm"
+   473→                        variant="ghost"
+   474→                        onClick={() => openDetail(b)}
+   475→                        className="gap-1"
+   476→                      >
+   477→                        <Eye className="h-4 w-4" />
+   478→                        <span className="hidden sm:inline">View</span>
+   479→                      </Button>
+   480→                    </TableCell>
+   481→                  </TableRow>
+   482→                ))}
+   483→              </TableBody>
+   484→            </Table>
+   485→          )}
+   486→        </CardContent>
+   487→      </Card>
+   488→
+   489→      {/* Detail Dialog */}
+   490→      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+   491→        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+   492→          <DialogHeader>
+   493→            <DialogTitle className="flex items-center gap-2">
+   494→              <span>Booking</span>
+   495→              {selected && (
+   496→                <span className="font-mono text-sm text-blue-900">
+   497→                  {selected.ticketId}
+   498→                </span>
+   499→              )}
+   500→            </DialogTitle>
+   501→            <DialogDescription>
+   502→              Update status, add notes, adjust prices, or email the customer.
+   503→            </DialogDescription>
+   504→          </DialogHeader>
+   505→
+   506→          {selected && (
+   507→            <div className="space-y-4">
+   508→              {/* Read-only summary */}
+   509→              <div className="grid grid-cols-2 gap-3 rounded-lg border bg-slate-50 p-3 text-sm">
+   510→                <Info label="Customer" value={selected.customerName} />
+   511→                <Info label="Email" value={selected.email} />
+   512→                <Info label="Phone" value={selected.phone || "—"} />
+   513→                <Info label="Source" value={selected.source} />
+   514→                <Info label="Device" value={`${selected.deviceType} ${selected.deviceModel}`} />
+   515→                <Info
+   516→                  label="Booked"
+   517→                  value={
+   518→                    selected.bookingDate
+   519→                      ? `${selected.bookingDate} ${selected.bookingTime || ""}`
+   520→                      : "—"
+   521→                  }
+   522→                />
+   523→                <div className="col-span-2">
+   524→                  <Info label="Issue" value={selected.issue} />
+   525→                </div>
+   526→                {selected.needsCollection && (
+   527→                  <div className="col-span-2">
+   528→                    <Info
+   529→                      label="Collection address"
+   530→                      value={selected.collectionAddr || "—"}
+   531→                    />
+   532→                  </div>
+   533→                )}
+   534→              </div>
+   535→
+   536→              {/* Editable fields */}
+   537→              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+   538→                <div className="space-y-1.5">
+   539→                  <Label>Status</Label>
+   540→                  <Select value={editStatus} onValueChange={setEditStatus}>
+   541→                    <SelectTrigger>
+   542→                      <SelectValue />
+   543→                    </SelectTrigger>
+   544→                    <SelectContent>
+   545→                      {STATUS_OPTIONS.filter((s) => s !== "all").map((s) => (
+   546→                        <SelectItem key={s} value={s}>
+   547→                          {s}
+   548→                        </SelectItem>
+   549→                      ))}
+   550→                    </SelectContent>
+   551→                  </Select>
+   552→                </div>
+   553→                <div className="space-y-1.5">
+   554→                  <Label>Quoted price</Label>
+   555→                  <Input
+   556→                    value={editQuoted}
+   557→                    onChange={(e) => setEditQuoted(e.target.value)}
+   558→                    placeholder="e.g. £49"
+   559→                  />
+   560→                </div>
+   561→                <div className="space-y-1.5">
+   562→                  <Label>Final price</Label>
+   563→                  <Input
+   564→                    value={editFinal}
+   565→                    onChange={(e) => setEditFinal(e.target.value)}
+   566→                    placeholder="e.g. £49"
+   567→                  />
+   568→                </div>
+   569→                <div className="space-y-1.5 sm:col-span-2">
+   570→                  <Label>Technician notes</Label>
+   571→                  <Textarea
+   572→                    rows={3}
+   573→                    value={editNotes}
+   574→                    onChange={(e) => setEditNotes(e.target.value)}
+   575→                    placeholder="Internal notes about the repair…"
+   576→                  />
+   577→                </div>
+   578→              </div>
+   579→            </div>
+   580→          )}
+   581→
+   582→          <DialogFooter className="flex-wrap gap-2">
+   583→            <Button
+   584→              variant="destructive"
+   585→              onClick={openDelete}
+   586→              className="mr-auto gap-2"
+   587→            >
+   588→              <Trash2 className="h-4 w-4" />
+   589→              Delete
+   590→            </Button>
+   591→            <Button
+   592→              variant="outline"
+   593→              onClick={openReply}
+   594→              className="gap-2"
+   595→              disabled={!selected?.email}
+   596→            >
+   597→              <Mail className="h-4 w-4" />
+   598→              Email customer
+   599→            </Button>
+   600→            <Button
+   601→              onClick={saveBooking}
+   602→              disabled={saving}
+   603→              className="gap-2 bg-blue-900 hover:bg-blue-800"
+   604→            >
+   605→              {saving ? (
+   606→                <Loader2 className="h-4 w-4 animate-spin" />
+   607→              ) : (
+   608→                <Save className="h-4 w-4" />
+   609→              )}
+   610→              Save
+   611→            </Button>
+   612→          </DialogFooter>
+   613→        </DialogContent>
+   614→      </Dialog>
+   615→
+   616→      {/* Delete confirm */}
+   617→      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+   618→        <AlertDialogContent>
+   619→          <AlertDialogHeader>
+   620→            <AlertDialogTitle>Delete this booking?</AlertDialogTitle>
+   621→            <AlertDialogDescription>
+   622→              This will permanently delete{" "}
+   623→              <span className="font-mono font-semibold">
+   624→                {selected?.ticketId}
+   625→              </span>{" "}
+   626→              for {selected?.customerName}. This action cannot be undone.
+   627→            </AlertDialogDescription>
+   628→          </AlertDialogHeader>
+   629→          <AlertDialogFooter>
+   630→            <AlertDialogCancel>Cancel</AlertDialogCancel>
+   631→            <AlertDialogAction
+   632→              onClick={confirmDelete}
+   633→              disabled={deleting}
+   634→              className="bg-red-600 hover:bg-red-700"
+   635→            >
+   636→              {deleting ? (
+   637→                <Loader2 className="h-4 w-4 animate-spin" />
+   638→              ) : (
+   639→                "Delete"
+   640→              )}
+   641→            </AlertDialogAction>
+   642→          </AlertDialogFooter>
+   643→        </AlertDialogContent>
+   644→      </AlertDialog>
+   645→
+   646→      {/* Reply dialog */}
+   647→      <Dialog open={replyOpen} onOpenChange={setReplyOpen}>
+   648→        <DialogContent className="sm:max-w-xl">
+   649→          <DialogHeader>
+   650→            <DialogTitle>Email customer</DialogTitle>
+   651→            <DialogDescription>
+   652→              To: {selected?.email || "—"}
+   653→            </DialogDescription>
+   654→          </DialogHeader>
+   655→          <div className="space-y-3">
+   656→            <div className="space-y-1.5">
+   657→              <Label>Subject</Label>
+   658→              <Input
+   659→                value={replySubject}
+   660→                onChange={(e) => setReplySubject(e.target.value)}
+   661→              />
+   662→            </div>
+   663→            <div className="space-y-1.5">
+   664→              <Label>Message</Label>
+   665→              <Textarea
+   666→                rows={8}
+   667→                value={replyBody}
+   668→                onChange={(e) => setReplyBody(e.target.value)}
+   669→              />
+   670→            </div>
+   671→          </div>
+   672→          <DialogFooter>
+   673→            <Button
+   674→              onClick={sendReply}
+   675→              disabled={sending}
+   676→              className="gap-2 bg-blue-900 hover:bg-blue-800"
+   677→            >
+   678→              {sending ? (
+   679→                <Loader2 className="h-4 w-4 animate-spin" />
+   680→              ) : (
+   681→                <Mail className="h-4 w-4" />
+   682→              )}
+   683→              Send email
+   684→            </Button>
+   685→          </DialogFooter>
+   686→        </DialogContent>
+   687→      </Dialog>
+   688→    </div>
+   689→  );
+   690→}
+   691→
+   692→function Info({ label, value }: { label: string; value: string }) {
+   693→  return (
+   694→    <div>
+   695→      <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+   696→        {label}
+   697→      </div>
+   698→      <div className="text-sm text-slate-900">{value || "—"}</div>
+   699→    </div>
+   700→  );
+   701→}
+   702→

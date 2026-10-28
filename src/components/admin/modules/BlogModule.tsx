@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,7 +76,7 @@ const STORAGE_KEY = "grg-admin-blog";
 const FALLBACK_POSTS: BlogPost[] = [
   { id: "p1", slug: "cracked-iphone-screen-glasgow-guide", title: "Cracked iPhone Screen in Glasgow? Complete Repair Guide", excerpt: "Everything you need to know about iPhone screen repair in Glasgow.", content: "# Cracked iPhone Screen\n\nCosts, turnaround times, and warranty info.", coverImage: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=800&q=80", category: "Mobile Repair", tags: "iPhone,screen repair", author: "Gadget Repairs Glasgow", published: true, featured: true, createdAt: "2025-10-20T10:00:00Z", updatedAt: "2025-10-20T10:00:00Z", scheduledAt: null },
   { id: "p2", slug: "macbook-repair-glasgow-guide", title: "MacBook Repair in Glasgow: Costs & What to Expect", excerpt: "MacBook not turning on? Here's everything Glasgow MacBook owners need to know.", content: "# MacBook Repair\n\nCommon issues and costs.", coverImage: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80", category: "MacBook Repair", tags: "MacBook,repair", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-19T10:00:00Z", updatedAt: "2025-10-19T10:00:00Z", scheduledAt: null },
-  { id: "p3", slug: "ghd-straightener-repair-guide", title: "GHD Won't Heat? Common Faults & Repair Costs", excerpt: "GHD stopped working? Here's what's wrong and how much it costs to fix.", content: "# GHD Repair Guide\n\nCommon faults and costs.", coverImage: "https://images.unsplash.com/photo-1522335789203-aaa9cbb96e9d?w=800&q=80", category: "GHD Repair", tags: "GHD,straightener", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-18T10:00:00Z", updatedAt: "2025-10-18T10:00:00Z", scheduledAt: null },
+  { id: "p3", slug: "ghd-straightener-repair-guide", title: "GHD Won't Heat? Common Faults & Repair Costs", excerpt: "GHD stopped working? Here's what's wrong and how much it costs to fix.", content: "# GHD Repair Guide\n\nCommon faults and costs.", coverImage: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&q=80", category: "GHD Repair", tags: "GHD,straightener", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-18T10:00:00Z", updatedAt: "2025-10-18T10:00:00Z", scheduledAt: null },
   { id: "p4", slug: "ps5-xbox-hdmi-port-repair", title: "PS5/Xbox HDMI Port Broken? Console Repair Guide", excerpt: "No signal on your PS5 or Xbox? Here's how much console repair costs.", content: "# Console HDMI Repair\n\nCommon issues and costs.", coverImage: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80", category: "Game Console Repair", tags: "PS5,Xbox,HDMI", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-17T10:00:00Z", updatedAt: "2025-10-17T10:00:00Z", scheduledAt: null },
 ];
 
@@ -112,29 +112,72 @@ export function BlogModule() {
   const [deleting, setDeleting] = useState(false);
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
-  const fileInputRef = useState<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const coverInputRef = useRef<HTMLInputElement | null>(null);
+  // Store base64 images separately so they don't fill the textarea/input fields
+  const [imageStore, setImageStore] = useState<Record<string, string>>({});
+  const [imageCounter, setImageCounter] = useState(0);
 
   function insertImageAtCursor(url: string) {
     const textarea = document.getElementById("bp-content") as HTMLTextAreaElement;
+
+    // If it's a base64 data URL, store it separately and use a short placeholder
+    let displayUrl = url;
+    let placeholder = "";
+    if (url.startsWith("data:")) {
+      const imgId = `img-${Date.now()}`;
+      setImageStore((prev) => ({ ...prev, [imgId]: url }));
+      placeholder = `[image:${imgId}]`;
+      displayUrl = placeholder;
+    }
+
+    const mdImage = `\n\n![Image](${displayUrl})\n\n`;
+
     if (!textarea) {
-      // Fallback: append to end
-      const mdImage = `\n\n![Image](${url})\n\n`;
       setForm((f) => ({ ...f, content: f.content + mdImage }));
+    } else {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const before = form.content.substring(0, start);
+      const after = form.content.substring(end);
+      const newContent = before + mdImage + after;
+      setForm((f) => ({ ...f, content: newContent }));
+    }
+
+    // If no cover image is set yet, auto-set this as the cover image
+    if (!form.coverImage) {
+      setForm((f) => ({ ...f, coverImage: url }));
+      toast.success("Image inserted and set as cover image");
+    } else {
+      toast.success("Image inserted into content");
+    }
+
+    // Restore cursor position
+    if (textarea) {
+      setTimeout(() => {
+        textarea.focus();
+        const newPos = (textarea.selectionStart || 0) + mdImage.length;
+        textarea.setSelectionRange(newPos, newPos);
+      }, 0);
+    }
+  }
+
+  function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image too large (max 5MB)");
       return;
     }
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const before = form.content.substring(0, start);
-    const after = form.content.substring(end);
-    const mdImage = `\n\n![Image](${url})\n\n`;
-    const newContent = before + mdImage + after;
-    setForm({ ...form, content: newContent });
-    // Restore cursor position after the inserted image
-    setTimeout(() => {
-      textarea.focus();
-      const newPos = start + mdImage.length;
-      textarea.setSelectionRange(newPos, newPos);
-    }, 0);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setForm((f) => ({ ...f, coverImage: base64 }));
+      toast.success("Cover image uploaded");
+    };
+    reader.onerror = () => toast.error("Failed to read image");
+    reader.readAsDataURL(file);
+    e.target.value = "";
   }
 
   function handleImageUrlSubmit() {
@@ -231,8 +274,14 @@ export function BlogModule() {
     const slug = form.slug || slugify(form.title);
     const now = new Date().toISOString();
 
+    // Convert image placeholders back to actual data URLs for storage
+    let finalContent = form.content;
+    for (const [imgId, dataUrl] of Object.entries(imageStore)) {
+      finalContent = finalContent.replaceAll(`[image:${imgId}]`, dataUrl);
+    }
+
     try {
-      const payload = { ...form, slug };
+      const payload = { ...form, content: finalContent, slug };
       if (editing) {
         const d = await adminJson<{ post: BlogPost }>(
           `/api/admin/blog/${editing.id}`,
@@ -271,7 +320,7 @@ export function BlogModule() {
           slug,
           title: form.title,
           excerpt: form.excerpt,
-          content: form.content,
+          content: finalContent,
           coverImage: form.coverImage || null,
           category: form.category,
           tags: form.tags || null,
@@ -467,7 +516,7 @@ export function BlogModule() {
 
       {/* Create / Edit Dialog */}
       <Dialog open={creating} onOpenChange={setCreating}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[95vh] overflow-y-auto w-[95vw] max-w-2xl sm:w-full p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Post" : "New Blog Post"}</DialogTitle>
             <DialogDescription>
@@ -484,7 +533,7 @@ export function BlogModule() {
                 placeholder="Enter post title"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="bp-slug">Slug (optional)</Label>
                 <Input
@@ -528,7 +577,7 @@ export function BlogModule() {
                 </Button>
               </div>
               {imagePickerOpen && (
-                <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-4 space-y-3">
+                <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-3 sm:p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold text-blue-900">Insert Image Anywhere in Content</p>
                     <button
@@ -547,18 +596,18 @@ export function BlogModule() {
                     <Label className="text-xs font-medium text-slate-700">Upload from device (max 2MB)</Label>
                     <div className="flex items-center gap-2">
                       <input
-                        ref={fileInputRef as any}
+                        ref={fileInputRef}
                         type="file"
                         accept="image/*"
                         onChange={handleFileUpload}
-                        className="hidden"
+                        className="sr-only"
                       />
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         className="gap-1.5"
-                        onClick={() => (fileInputRef[0] as any)?.click()}
+                        onClick={() => fileInputRef.current?.click()}
                       >
                         <ImagePlus className="h-3.5 w-3.5" />
                         Choose Image
@@ -604,22 +653,66 @@ export function BlogModule() {
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
                 placeholder={"# Heading\n\nWrite your post content in markdown...\n\n![Image](https://example.com/photo.jpg)\n\nMore text here..."}
-                rows={10}
+                rows={8}
                 className="font-mono text-sm"
               />
               <p className="text-[11px] text-slate-400">
                 Tip: Use <code className="rounded bg-slate-100 px-1">![Alt text](URL)</code> to add images anywhere in the content. Click "Insert Image" above for a visual picker.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="bp-cover">Cover Image URL</Label>
-                <Input
-                  id="bp-cover"
-                  value={form.coverImage}
-                  onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
-                  placeholder="https://..."
-                />
+                <Label htmlFor="bp-cover">Cover Image</Label>
+                {form.coverImage ? (
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={form.coverImage}
+                      alt="Cover preview"
+                      className="h-14 w-20 rounded object-cover border border-slate-200 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-slate-500 truncate">
+                        {form.coverImage.startsWith("data:") ? "Uploaded image" : form.coverImage}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-red-600 h-7 mt-1"
+                        onClick={() => setForm({ ...form, coverImage: "" })}
+                      >
+                        <X className="h-3 w-3" /> Remove
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="bp-cover"
+                      value={form.coverImage}
+                      onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
+                      placeholder="Paste image URL"
+                      className="flex-1"
+                    />
+                    <input
+                      ref={coverInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverUpload}
+                      className="sr-only"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 shrink-0"
+                      onClick={() => coverInputRef.current?.click()}
+                    >
+                      <ImagePlus className="h-3.5 w-3.5" />
+                      Upload
+                    </Button>
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="bp-tags">Tags (comma-separated)</Label>
@@ -631,7 +724,7 @@ export function BlogModule() {
                 />
               </div>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               <div className="flex items-center gap-2">
                 <Switch
                   id="bp-published"
@@ -690,11 +783,11 @@ export function BlogModule() {
               )}
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreating(false)}>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setCreating(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={save} disabled={saving} className="gap-2 bg-blue-900 hover:bg-blue-800">
+            <Button onClick={save} disabled={saving} className="gap-2 bg-blue-900 hover:bg-blue-800 w-full sm:w-auto">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {editing ? "Update" : "Create"}
             </Button>
