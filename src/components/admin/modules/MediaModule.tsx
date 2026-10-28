@@ -83,9 +83,11 @@ export function MediaModule() {
 
   useEffect(() => {
     const stored = loadFromStorage();
-    setItems(stored);
-    setLoading(false);
-    setHasLoaded(true);
+    Promise.resolve().then(() => {
+      setItems(stored);
+      setLoading(false);
+      setHasLoaded(true);
+    });
   }, []);
 
   // Sync to localStorage on every change (skip initial load)
