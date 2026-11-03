@@ -280,8 +280,13 @@ export function BlogModule() {
       finalContent = finalContent.replaceAll(`[image:${imgId}]`, dataUrl);
     }
 
+    // If scheduled, auto-set published=true so the post appears when the schedule time arrives
+    const isScheduled = form.scheduledAt && new Date(form.scheduledAt) > new Date();
+    const publishedFlag = isScheduled ? true : form.published;
+    const scheduledAtISO = form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null;
+
     try {
-      const payload = { ...form, content: finalContent, slug };
+      const payload = { ...form, content: finalContent, slug, published: publishedFlag, scheduledAt: scheduledAtISO };
       if (editing) {
         const d = await adminJson<{ post: BlogPost }>(
           `/api/admin/blog/${editing.id}`,
@@ -305,15 +310,17 @@ export function BlogModule() {
           ...editing,
           ...form,
           slug,
+          content: finalContent,
+          published: publishedFlag,
           updatedAt: now,
-          scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
+          scheduledAt: scheduledAtISO,
         };
         setPosts((prev) => {
           const next = prev.map((p) => (p.id === editing.id ? updated : p));
           saveToStorage(next);
           return next;
         });
-        toast.success("Post updated (saved locally)");
+        toast.success(isScheduled ? "Post scheduled (saved locally)" : "Post updated (saved locally)");
       } else {
         const newPost: BlogPost = {
           id: `local-${Date.now()}`,
@@ -325,18 +332,18 @@ export function BlogModule() {
           category: form.category,
           tags: form.tags || null,
           author: form.author,
-          published: form.published,
+          published: publishedFlag,
           featured: form.featured,
           createdAt: now,
           updatedAt: now,
-          scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
+          scheduledAt: scheduledAtISO,
         };
         setPosts((prev) => {
           const next = [newPost, ...prev];
           saveToStorage(next);
           return next;
         });
-        toast.success("Post created (saved locally)");
+        toast.success(isScheduled ? "Post scheduled (saved locally)" : "Post created (saved locally)");
       }
       setCreating(false);
     } finally {
@@ -774,12 +781,17 @@ export function BlogModule() {
                 )}
               </div>
               {form.scheduledAt && (
-                <p className="text-[11px] font-medium text-blue-700">
-                  Will publish on: {new Date(form.scheduledAt).toLocaleString("en-GB", {
-                    weekday: "long", day: "numeric", month: "long", year: "numeric",
-                    hour: "2-digit", minute: "2-digit"
-                  })}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-medium text-orange-700">
+                    📅 Scheduled for: {new Date(form.scheduledAt).toLocaleString("en-GB", {
+                      weekday: "long", day: "numeric", month: "long", year: "numeric",
+                      hour: "2-digit", minute: "2-digit"
+                    })}
+                  </p>
+                  <p className="text-[11px] text-slate-500">
+                    Post will be auto-published at this time. It will not appear on the public blog until the scheduled time.
+                  </p>
+                </div>
               )}
             </div>
           </div>
