@@ -74,6 +74,11 @@ import {
   MoreVertical,
   CheckSquare,
   X,
+  Check,
+  Clock,
+  Wrench,
+  PackageCheck,
+  Ban,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -285,6 +290,24 @@ export function BookingsModule() {
     setEditQuoted(b.quotedPrice || "");
     setEditFinal(b.finalPrice || "");
     setDetailOpen(true);
+  }
+
+  // Quick status change directly from the table (no need to open detail dialog)
+  async function quickStatus(b: Booking, status: string) {
+    setBookings((prev) => {
+      const next = prev.map((x) => x.id === b.id ? { ...x, status, updatedAt: new Date().toISOString() } : x);
+      saveToStorage(next);
+      return next;
+    });
+    try {
+      await adminJson(`/api/admin/bookings/${b.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      toast.success(`${b.ticketId}: marked as ${status}`);
+    } catch {
+      toast.success(`${b.ticketId}: marked as ${status} (saved locally)`);
+    }
   }
 
   async function saveBooking() {
@@ -878,15 +901,46 @@ export function BookingsModule() {
                             {b.createdAt ? fmtDateTime(b.createdAt) : "—"}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => openDetail(b)}
-                              className="gap-1"
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span className="hidden sm:inline">View</span>
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-52">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => openDetail(b)} className="gap-2">
+                                  <Eye className="h-4 w-4" /> View details
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuLabel className="text-xs text-slate-400">Change status</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => quickStatus(b, "In Progress")} className="gap-2">
+                                  <Wrench className="h-4 w-4 text-blue-600" /> Mark In Progress
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => quickStatus(b, "Ready")} className="gap-2">
+                                  <PackageCheck className="h-4 w-4 text-emerald-600" /> Mark Ready
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => quickStatus(b, "Completed")} className="gap-2">
+                                  <Check className="h-4 w-4 text-zinc-600" /> Mark Completed
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => quickStatus(b, "Pending")} className="gap-2">
+                                  <Clock className="h-4 w-4 text-orange-600" /> Set Pending
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => quickStatus(b, "Cancelled")} className="gap-2">
+                                  <Ban className="h-4 w-4 text-red-600" /> Cancel booking
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => duplicateBooking(b)} className="gap-2">
+                                  <Copy className="h-4 w-4" /> Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(b.ticketId); toast.success("Ticket ID copied"); }} className="gap-2">
+                                  <Copy className="h-4 w-4" /> Copy ticket ID
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => moveToTrash(b)} className="gap-2 text-red-600">
+                                  <Trash2 className="h-4 w-4" /> Move to trash
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       ))}
