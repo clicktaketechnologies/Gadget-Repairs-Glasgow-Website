@@ -95,11 +95,11 @@ function saveToStorage(reviews: Review[]) {
   if (typeof window === "undefined") return;
   try {
     // Save admin reviews (exclude public ones by id prefix)
-    const adminOnly = reviews.filter((r) => !r.id.startsWith("local-"));
+    const adminOnly = reviews.filter((r) => !r.id.startsWith("pub-"));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(adminOnly));
 
     // Also update public reviews if any were modified
-    const publicReviews = reviews.filter((r) => r.id.startsWith("local-"));
+    const publicReviews = reviews.filter((r) => r.id.startsWith("pub-"));
     if (publicReviews.length > 0) {
       localStorage.setItem(PUBLIC_KEY, JSON.stringify(publicReviews));
     }

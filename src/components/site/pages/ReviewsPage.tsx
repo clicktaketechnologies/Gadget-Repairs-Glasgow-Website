@@ -80,7 +80,7 @@ export function ReviewsPage() {
       if (!contentType.includes("application/json")) {
         // API not available — save review to localStorage
         const review = {
-          id: `local-${Date.now()}`,
+          id: `pub-${Date.now()}`,
           ...form,
           source: "online",
           approved: false,

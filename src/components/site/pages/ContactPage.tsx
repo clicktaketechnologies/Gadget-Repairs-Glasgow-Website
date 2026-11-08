@@ -87,7 +87,7 @@ export function ContactPage() {
         const ticketNum = String(1024 + Math.floor(Math.random() * 8000)).padStart(4, "0");
         const newTicketId = `GD-${ticketNum}`;
         const booking = {
-          id: `local-${Date.now()}`,
+          id: `pub-${Date.now()}`,
           ticketId: newTicketId,
           ...form,
           status: "Pending",

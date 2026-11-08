@@ -168,17 +168,16 @@ function saveToStorage(bookings: Booking[]) {
   if (typeof window === "undefined") return;
   try {
     // Save admin bookings (exclude public ones by id prefix)
-    const adminOnly = bookings.filter((b) => !b.id.startsWith("local-") && !b.id.startsWith("public-"));
+    const adminOnly = bookings.filter((b) => !b.id.startsWith("pub-"));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(adminOnly));
 
-    // Also update public bookings if any public bookings were modified
-    const publicBookings = bookings.filter((b) => b.id.startsWith("local-") || b.id.startsWith("public-"));
+    // Only update public bookings if there are any in the current list
+    // (don't remove the public key — public bookings might exist outside this list)
+    const publicBookings = bookings.filter((b) => b.id.startsWith("pub-"));
     if (publicBookings.length > 0) {
       localStorage.setItem(PUBLIC_KEY, JSON.stringify(publicBookings));
-    } else {
-      // Clear stale public key when nothing public remains
-      localStorage.removeItem(PUBLIC_KEY);
     }
+    // NEVER removeItem(PUBLIC_KEY) — it would delete customer submissions
   } catch {}
 }
 
