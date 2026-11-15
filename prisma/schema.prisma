@@ -1,13 +1,15 @@
 // Prisma schema for Gadget Repairs Glasgow
-// Uses SQLite locally (DATABASE_URL=file:.../custom.db) so the API works in dev.
-// Production Render/Supabase can swap the provider + URL when deploying.
+// Production: PostgreSQL (Supabase via Render, DATABASE_URL=postgresql://...)
+// Local dev: the .env file: URL won't connect, but the app is offline-first
+// (localStorage) and all API routes have try/catch fallback, so local dev
+// works without a live database.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
