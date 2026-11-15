@@ -144,16 +144,31 @@ const FALLBACK_BOOKINGS: Booking[] = [
   { id: "b5", ticketId: "GD-1028", customerName: "James O'Brien", email: "james@example.com", phone: "+44 7700 900104", deviceType: "Console", deviceModel: "PlayStation 5", issue: "HDMI port broken", needsCollection: false, collectionAddr: null, status: "Completed", technicianNotes: "HDMI port resoldered", quotedPrice: "£100", finalPrice: "£100", source: "online", bookingDate: "2025-10-17", bookingTime: "09:30", createdAt: new Date(Date.now() - 4 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 4 * 86400000).toISOString() },
 ];
 
+// Demo/fallback booking IDs that should never be treated as real data.
+const DEMO_IDS = new Set(["b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8"]);
+const DEMO_TICKETS = new Set(["GD-1024", "GD-1025", "GD-1026", "GD-1027", "GD-1028"]);
+function isDemoBooking(b: any): boolean {
+  if (!b || typeof b !== "object") return true;
+  if (DEMO_IDS.has(b.id)) return true;
+  if (DEMO_TICKETS.has(b.ticketId)) return true;
+  if (typeof b.id === "string" && /^[a-z]\d$/.test(b.id)) return true;
+  return false;
+}
+
 function loadFromStorage(): Booking[] | null {
   if (typeof window === "undefined") return null;
   try {
-    // Read admin bookings
+    // Read admin bookings (filter out any stale demo data)
     const raw = localStorage.getItem(STORAGE_KEY);
-    const adminBookings = raw ? JSON.parse(raw) : [];
+    const adminBookings = raw
+      ? (JSON.parse(raw) as any[]).filter((b) => !isDemoBooking(b))
+      : [];
 
     // Also read public bookings (submitted via the website booking form)
     const publicRaw = localStorage.getItem(PUBLIC_KEY);
-    const publicBookings = publicRaw ? JSON.parse(publicRaw) : [];
+    const publicBookings = publicRaw
+      ? (JSON.parse(publicRaw) as any[]).filter((b) => !isDemoBooking(b))
+      : [];
 
     // Merge: public bookings first (most recent), then admin bookings (dedup by id)
     const adminIds = new Set(adminBookings.map((b: any) => b.id));
@@ -172,13 +187,17 @@ function loadFromStorage(): Booking[] | null {
 function saveToStorage(bookings: Booking[]) {
   if (typeof window === "undefined") return;
   try {
+    // Never persist demo/fallback bookings to localStorage — they are
+    // in-memory only and should not leak across devices or refreshes.
+    const real = bookings.filter((b) => !isDemoBooking(b));
+
     // Save admin bookings (exclude public ones by id prefix)
-    const adminOnly = bookings.filter((b) => !b.id.startsWith("pub-"));
+    const adminOnly = real.filter((b) => !b.id.startsWith("pub-"));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(adminOnly));
 
     // Only update public bookings if there are any in the current list
     // (don't remove the public key — public bookings might exist outside this list)
-    const publicBookings = bookings.filter((b) => b.id.startsWith("pub-"));
+    const publicBookings = real.filter((b) => b.id.startsWith("pub-"));
     if (publicBookings.length > 0) {
       localStorage.setItem(PUBLIC_KEY, JSON.stringify(publicBookings));
     }
@@ -190,7 +209,9 @@ function loadTrashFromStorage(): Booking[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(TRASH_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const arr = raw ? JSON.parse(raw) : [];
+    // Filter out any demo/fallback data that might have leaked into trash
+    return Array.isArray(arr) ? arr.filter((b: any) => !isDemoBooking(b)) : [];
   } catch {
     return [];
   }
@@ -249,9 +270,21 @@ export function BookingsModule() {
         `/api/admin/bookings?${params.toString()}`
       );
       if (data.bookings && data.bookings.length > 0) {
-        setBookings(data.bookings);
-        saveToStorage(data.bookings);
+        // API returned real data — use it as the source of truth, but also
+        // merge in any public bookings from localStorage that the API might
+        // not have yet (e.g. just submitted and not yet synced).
+        const apiIds = new Set(data.bookings.map((b) => b.id));
+        const stored = loadFromStorage();
+        const localOnly = stored
+          ? stored.filter((b) => !apiIds.has(b.id) && b.id.startsWith("pub-"))
+          : [];
+        const merged = [...localOnly, ...data.bookings];
+        setBookings(merged);
+        // Cache the merged data locally (for offline access)
+        saveToStorage(merged);
       } else {
+        // API returned empty — use localStorage (public bookings submitted
+        // via the form) or the in-memory fallback (never persisted).
         const stored = loadFromStorage();
         setBookings(stored || FALLBACK_BOOKINGS);
       }

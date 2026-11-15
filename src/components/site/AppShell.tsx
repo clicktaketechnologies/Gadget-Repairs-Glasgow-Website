@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useNav, installUrlSync, type Branding, type SiteSettings } from "@/store/nav";
 import "@/lib/firebase"; // side-effect: analytics
+import { migrateData } from "@/lib/migrate";
 import { STATIC_BRANDING, STATIC_SETTINGS } from "./staticData";
 import { SeoHead } from "@/components/seo/SeoHead";
 import { PublicSite } from "./PublicSite";
@@ -13,6 +14,12 @@ export function AppShell() {
   const setBootstrap = useNav((s) => s.setBootstrap);
   const branding = useNav((s) => s.branding);
   const settings = useNav((s) => s.settings);
+
+  // 0. Migrate/clean old stale localStorage data so every device shows the
+  //    same current data after a deploy. Runs once per DATA_VERSION change.
+  useEffect(() => {
+    migrateData();
+  }, []);
 
   // 1. Static bootstrap immediately so the UI is never blank.
   useEffect(() => {
