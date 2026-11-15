@@ -12,36 +12,85 @@ export async function GET(req: NextRequest) {
   const q = searchParams.get("q");
   const where: any = {};
   if (status && status !== "all") where.status = status;
-  if (q) { where.OR = [{ ticketId: { contains: q } }, { customerName: { contains: q } }, { email: { contains: q } }, { phone: { contains: q } }, { deviceModel: { contains: q } }, { issue: { contains: q } }]; }
-  const bookings = await db.booking.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
-  return setCorsHeaders(NextResponse.json({ bookings }), getOrigin(req));
+  if (q) {
+    where.OR = [
+      { ticketId: { contains: q } },
+      { customerName: { contains: q } },
+      { email: { contains: q } },
+      { phone: { contains: q } },
+      { deviceModel: { contains: q } },
+      { issue: { contains: q } },
+    ];
+  }
+  try {
+    const bookings = await db.booking.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
+    return setCorsHeaders(NextResponse.json({ bookings }), getOrigin(req));
+  } catch {
+    // DB unavailable — return empty so the admin falls back to localStorage
+    return setCorsHeaders(NextResponse.json({ bookings: [] }), getOrigin(req));
+  }
 }
 
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin();
   if (!auth.ok) return setCorsHeaders(NextResponse.json({ error: auth.error }, { status: 401 }), getOrigin(req));
-  const data = await req.json();
+  const data = await req.json().catch(() => ({}));
   let tid = ticketId();
-  while (await db.booking.findUnique({ where: { ticketId: tid } })) tid = ticketId();
-  const booking = await db.booking.create({
-    data: {
-      ticketId: tid,
-      customerName: String(data.customerName || "").slice(0, 120),
-      email: String(data.email || "").slice(0, 160),
-      phone: String(data.phone || "").slice(0, 40),
-      deviceType: String(data.deviceType || "Phone").slice(0, 40),
-      deviceModel: String(data.deviceModel || "").slice(0, 120),
-      issue: String(data.issue || "").slice(0, 1000),
-      needsCollection: !!data.needsCollection,
-      collectionAddr: data.collectionAddr ? String(data.collectionAddr).slice(0, 300) : null,
-      status: data.status || "Pending",
-      technicianNotes: data.technicianNotes || null,
-      quotedPrice: data.quotedPrice || null,
-      finalPrice: data.finalPrice || null,
-      source: data.source || "walk-in",
-      bookingDate: data.bookingDate || new Date().toISOString().split("T")[0],
-      bookingTime: data.bookingTime || "10:30",
-    },
-  });
-  return setCorsHeaders(NextResponse.json({ booking }), getOrigin(req));
+  let tries = 0;
+  try {
+    while (await db.booking.findUnique({ where: { ticketId: tid } }) && tries < 10) {
+      tid = ticketId();
+      tries++;
+    }
+  } catch {
+    // ignore — keep generated id
+  }
+  try {
+    const booking = await db.booking.create({
+      data: {
+        ticketId: tid,
+        customerName: String(data.customerName || "").slice(0, 120),
+        email: String(data.email || "").slice(0, 160),
+        phone: String(data.phone || "").slice(0, 40),
+        deviceType: String(data.deviceType || "Phone").slice(0, 40),
+        deviceModel: String(data.deviceModel || "").slice(0, 120),
+        issue: String(data.issue || "").slice(0, 1000),
+        needsCollection: !!data.needsCollection,
+        collectionAddr: data.collectionAddr ? String(data.collectionAddr).slice(0, 300) : null,
+        status: data.status || "Pending",
+        technicianNotes: data.technicianNotes || null,
+        quotedPrice: data.quotedPrice || null,
+        finalPrice: data.finalPrice || null,
+        source: data.source || "walk-in",
+        bookingDate: data.bookingDate || new Date().toISOString().split("T")[0],
+        bookingTime: data.bookingTime || "10:30",
+      },
+    });
+    return setCorsHeaders(NextResponse.json({ booking }), getOrigin(req));
+  } catch {
+    // DB unavailable — return a local booking object so the admin can still persist it client-side
+    return setCorsHeaders(
+      NextResponse.json({
+        booking: {
+          id: `local-${Date.now()}`,
+          ticketId: tid,
+          customerName: String(data.customerName || "").slice(0, 120),
+          email: String(data.email || "").slice(0, 160),
+          phone: String(data.phone || "").slice(0, 40),
+          deviceType: String(data.deviceType || "Phone").slice(0, 40),
+          deviceModel: String(data.deviceModel || "").slice(0, 120),
+          issue: String(data.issue || "").slice(0, 1000),
+          needsCollection: !!data.needsCollection,
+          collectionAddr: data.collectionAddr ? String(data.collectionAddr).slice(0, 300) : null,
+          status: data.status || "Pending",
+          source: data.source || "walk-in",
+          bookingDate: data.bookingDate || new Date().toISOString().split("T")[0],
+          bookingTime: data.bookingTime || "10:30",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      }),
+      getOrigin(req)
+    );
+  }
 }

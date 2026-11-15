@@ -280,6 +280,46 @@ export function BookingsModule() {
     return () => window.removeEventListener("focus", onFocus);
   }, [load]);
 
+  // Real-time sync: when a new public booking is saved to localStorage
+  // (from the website booking form in another tab), merge it into the list
+  // immediately so the admin sees it without refreshing.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === PUBLIC_KEY) {
+        // A new public booking was saved — reload the merged list
+        const stored = loadFromStorage();
+        if (stored) {
+          setBookings((prev) => {
+            // Merge: keep existing admin edits, prepend any new public bookings
+            const prevIds = new Set(prev.map((b) => b.id));
+            const fresh = stored.filter((b) => !prevIds.has(b.id));
+            if (fresh.length === 0) return prev;
+            return [...fresh, ...prev];
+          });
+        }
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  // Poll localStorage every 3s as a back-up for same-tab submissions
+  // (the storage event only fires across tabs, not within the same tab).
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const stored = loadFromStorage();
+      if (stored) {
+        setBookings((prev) => {
+          const prevIds = new Set(prev.map((b) => b.id));
+          const fresh = stored.filter((b) => !prevIds.has(b.id));
+          if (fresh.length === 0) return prev;
+          return [...fresh, ...prev];
+        });
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Visible bookings depend on current view + filters (active only)
   const visibleBookings = useMemo(() => bookings, [bookings]);
 

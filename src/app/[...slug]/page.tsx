@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/site/AppShell";
-import { db } from "@/lib/db";
 
 const SITE_URL = "https://www.gadgetrepairsglasgow.co.uk";
 
 const PATH_META: Record<string, { title: string; description: string }> = {
   services: {
     title: "Repair Services & Pricing | Gadget Repairs Glasgow",
-    description: "Full range of phone, tablet, MacBook, laptop, GHD, game console, computer & smart watch repair services in Glasgow. Transparent pricing, 12-month warranty.",
+    description: "Full range of phone, tablet, MacBook, laptop, GHD, game console, computer & smart watch repair services in Glasgow. Transparent pricing, 30-day warranty.",
   },
   collection: {
     title: "Free Doorstep Collection | Gadget Repairs Glasgow",
@@ -45,6 +44,8 @@ const PATH_META: Record<string, { title: string; description: string }> = {
 
 async function getServiceName(slug: string): Promise<string | null> {
   try {
+    // Lazy-load Prisma so it doesn't get bundled into every page compile.
+    const { db } = await import("@/lib/db");
     const s = await db.service.findUnique({ where: { slug } });
     return s?.name ?? null;
   } catch { return null; }
@@ -64,7 +65,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const name = await getServiceName(slug[1]);
     if (name) {
       title = `${name} in Glasgow | Gadget Repairs Glasgow`;
-      description = `${name} at Gadget Repairs Glasgow on Trongate. Professional repair, fair pricing and 12-month warranty.`;
+      description = `${name} at Gadget Repairs Glasgow on Trongate. Professional repair, fair pricing and 30-day warranty.`;
     }
   }
 

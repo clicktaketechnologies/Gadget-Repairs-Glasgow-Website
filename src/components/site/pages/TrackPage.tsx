@@ -83,10 +83,14 @@ export function TrackPage() {
     setBooking(null);
     setNotFound(false);
 
-    // First: check localStorage for locally-created bookings
+    // First: check localStorage for locally-created bookings.
+    // Public bookings (submitted via the website form) live in grg-public-bookings,
+    // admin-created bookings live in grg-admin-bookings — check both.
     try {
-      const stored = JSON.parse(localStorage.getItem("grg-public-bookings") || "[]");
-      const localBooking = stored.find((b: any) => b.ticketId === tid);
+      const publicStored = JSON.parse(localStorage.getItem("grg-public-bookings") || "[]");
+      const adminStored = JSON.parse(localStorage.getItem("grg-admin-bookings") || "[]");
+      const merged = [...publicStored, ...adminStored];
+      const localBooking = merged.find((b: any) => (b.ticketId || "").toUpperCase() === tid);
       if (localBooking) {
         setBooking(localBooking as Booking);
         toast.success("Booking found!");

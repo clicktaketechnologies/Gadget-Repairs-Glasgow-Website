@@ -1,29 +1,158 @@
 // Prisma schema for Gadget Repairs Glasgow
-// Production: PostgreSQL (Supabase pooler, Session-mode, port 5432)
+// Uses SQLite locally (DATABASE_URL=file:.../custom.db) so the API works in dev.
+// Production Render/Supabase can swap the provider + URL when deploying.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-model User {
+model AdminUser {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String?
+  password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Post {
+model Booking {
+  id              String   @id @default(cuid())
+  ticketId        String   @unique
+  customerName    String
+  email           String
+  phone           String
+  deviceType      String
+  deviceModel     String
+  issue           String
+  needsCollection Boolean  @default(false)
+  collectionAddr  String?
+  status          String   @default("Pending")
+  technicianNotes String?
+  quotedPrice     String?
+  finalPrice      String?
+  source          String   @default("online")
+  bookingDate     String?
+  bookingTime     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Review {
   id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  author    String
+  rating    Int
+  comment   String
+  device    String?
+  source    String   @default("online")
+  approved  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model BlogPost {
+  id         String   @id @default(cuid())
+  slug       String   @unique
+  title      String
+  excerpt    String   @default("")
+  content    String   @default("")
+  coverImage String?
+  category   String   @default("General")
+  tags       String?
+  author     String   @default("Gadget Repairs Glasgow")
+  published  Boolean  @default(false)
+  featured   Boolean  @default(false)
+  scheduledAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Service {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  category    String
+  description String  @default("")
+  icon        String  @default("Wrench")
+  priceFrom   String?
+  priceTo     String?
+  turnaround  String?
+  popular     Boolean @default(false)
+  active      Boolean @default(true)
+  sortOrder   Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Branding {
+  id               String  @id
+  businessName     String  @default("Gadget Repairs Glasgow")
+  tagline          String  @default("")
+  about            String  @default("")
+  logoUrl          String?
+  faviconUrl       String?
+  primaryColor     String?
+  secondaryColor   String?
+  phone            String  @default("")
+  whatsapp         String?
+  email            String  @default("")
+  website          String?
+  gmbProfile       String?
+  mapLink          String?
+  mapEmbed         String?
+  address          String  @default("")
+  hoursJson        String  @default("[]")
+  socialsJson      String  @default("[]")
+  targetAreasJson  String  @default("[]")
+  rating           Float?
+  reviewCount      Int?
+  yearsExperience  Int?
+  updatedAt        DateTime @updatedAt
+}
+
+model SentEmail {
+  id               String   @id @default(cuid())
+  toEmail          String
+  subject          String
+  body             String
+  status           String   @default("queued")
+  relatedBookingId String?
+  createdAt        DateTime @default(now())
+}
+
+model EmailSettings {
+  id        String  @id
+  enabled   Boolean @default(false)
+  host      String?
+  port      Int     @default(587)
+  secure    Boolean @default(false)
+  user      String?
+  password  String?
+  fromName  String  @default("Gadget Repairs Glasgow")
+  fromEmail String  @default("info@gadgetrepairsglasgow.co.uk")
+  updatedAt DateTime @updatedAt
+}
+
+model SiteSettings {
+  id                     String  @id
+  collectionEnabled      Boolean @default(true)
+  collectionBannerEnabled Boolean @default(true)
+  announcementEnabled    Boolean @default(false)
+  announcementText       String?
+  ticketIdVisible        Boolean @default(true)
+  updatedAt              DateTime @updatedAt
+}
+
+model PageContent {
+  id      String @id @default(cuid())
+  page    String
+  section String
+  key     String
+  value   String
+
+  @@unique([page, section, key])
 }
