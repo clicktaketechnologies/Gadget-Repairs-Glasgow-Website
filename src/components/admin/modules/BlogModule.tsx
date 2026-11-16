@@ -73,12 +73,7 @@ const EMPTY = {
 
 const STORAGE_KEY = "grg-admin-blog";
 
-const FALLBACK_POSTS: BlogPost[] = [
-  { id: "p1", slug: "cracked-iphone-screen-glasgow-guide", title: "Cracked iPhone Screen in Glasgow? Complete Repair Guide", excerpt: "Everything you need to know about iPhone screen repair in Glasgow.", content: "# Cracked iPhone Screen\n\nCosts, turnaround times, and warranty info.", coverImage: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=800&q=80", category: "Mobile Repair", tags: "iPhone,screen repair", author: "Gadget Repairs Glasgow", published: true, featured: true, createdAt: "2025-10-20T10:00:00Z", updatedAt: "2025-10-20T10:00:00Z", scheduledAt: null },
-  { id: "p2", slug: "macbook-repair-glasgow-guide", title: "MacBook Repair in Glasgow: Costs & What to Expect", excerpt: "MacBook not turning on? Here's everything Glasgow MacBook owners need to know.", content: "# MacBook Repair\n\nCommon issues and costs.", coverImage: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80", category: "MacBook Repair", tags: "MacBook,repair", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-19T10:00:00Z", updatedAt: "2025-10-19T10:00:00Z", scheduledAt: null },
-  { id: "p3", slug: "ghd-straightener-repair-guide", title: "GHD Won't Heat? Common Faults & Repair Costs", excerpt: "GHD stopped working? Here's what's wrong and how much it costs to fix.", content: "# GHD Repair Guide\n\nCommon faults and costs.", coverImage: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&q=80", category: "GHD Repair", tags: "GHD,straightener", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-18T10:00:00Z", updatedAt: "2025-10-18T10:00:00Z", scheduledAt: null },
-  { id: "p4", slug: "ps5-xbox-hdmi-port-repair", title: "PS5/Xbox HDMI Port Broken? Console Repair Guide", excerpt: "No signal on your PS5 or Xbox? Here's how much console repair costs.", content: "# Console HDMI Repair\n\nCommon issues and costs.", coverImage: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80", category: "Game Console Repair", tags: "PS5,Xbox,HDMI", author: "Gadget Repairs Glasgow", published: true, featured: false, createdAt: "2025-10-17T10:00:00Z", updatedAt: "2025-10-17T10:00:00Z", scheduledAt: null },
-];
+// No demo/fallback blog posts — the admin only shows REAL data.
 
 function loadFromStorage(): BlogPost[] | null {
   if (typeof window === "undefined") return null;
@@ -219,7 +214,7 @@ export function BlogModule() {
       } else {
         // API returned empty — use localStorage or fallback
         const stored = loadFromStorage();
-        setPosts(stored || FALLBACK_POSTS);
+        setPosts(stored || []);
       }
     } catch {
       // API unreachable — use localStorage or fallback

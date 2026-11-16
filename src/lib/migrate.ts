@@ -6,7 +6,7 @@
 // cleans up old data. This guarantees that when the latest code is deployed,
 // every device clears its stale cache on the next page load.
 
-export const DATA_VERSION = "2026-11-15-v3";
+export const DATA_VERSION = "2026-11-16-no-demo";
 const VERSION_KEY = "grg-data-version";
 
 // IDs of old demo/fallback bookings that should never appear as real data.
@@ -47,10 +47,31 @@ function migrateReviewsKey(key: string): boolean {
     if (!raw) return false;
     const arr = JSON.parse(raw);
     if (!Array.isArray(arr)) return false;
-    // Filter out old demo reviews (IDs r1-r5 pattern)
+    // Filter out old demo reviews (IDs r1-r5, p1-p5 pattern)
     const filtered = arr.filter((r: any) => {
       if (!r || typeof r !== "object") return false;
       if (typeof r.id === "string" && /^[a-z]\d$/.test(r.id)) return false;
+      return true;
+    });
+    if (filtered.length !== arr.length) {
+      localStorage.setItem(key, JSON.stringify(filtered));
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+// Generic cleanup for any localStorage key holding an array — removes items
+// with demo-style IDs (single letter + digit: b1, r1, s1, p1, etc.)
+function migrateGenericKey(key: string): boolean {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return false;
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return false;
+    const filtered = arr.filter((item: any) => {
+      if (!item || typeof item !== "object") return false;
+      if (typeof item.id === "string" && /^[a-z]\d$/.test(item.id)) return false;
       return true;
     });
     if (filtered.length !== arr.length) {
@@ -97,6 +118,20 @@ export function migrateData(): { migrated: boolean; details: string[] } {
   }
   if (migrateReviewsKey("grg-admin-reviews")) {
     details.push("Cleared demo reviews from grg-admin-reviews");
+  }
+
+  // --- Clean up old demo services, blog posts, and any other demo data ---
+  if (migrateGenericKey("grg-admin-services")) {
+    details.push("Cleared demo services");
+  }
+  if (migrateGenericKey("grg-admin-blog")) {
+    details.push("Cleared demo blog posts");
+  }
+  if (migrateGenericKey("grg-admin-media")) {
+    details.push("Cleared demo media");
+  }
+  if (migrateGenericKey("grg-admin-pages")) {
+    details.push("Cleared demo pages");
   }
 
   // --- Stamp the new version so this only runs once ---

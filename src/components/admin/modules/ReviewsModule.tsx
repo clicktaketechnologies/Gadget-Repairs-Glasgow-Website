@@ -58,13 +58,7 @@ const EMPTY = {
 const STORAGE_KEY = "grg-admin-reviews";
 const PUBLIC_KEY = "grg-public-reviews";
 
-const FALLBACK_REVIEWS: Review[] = [
-  { id: "r1", author: "Mark Thompson", rating: 5, comment: "Cracked iPhone 14 Pro screen replaced in 40 minutes. Best price in Glasgow!", device: "iPhone 14 Pro", source: "Google", approved: true, createdAt: "2025-10-15T10:00:00Z" },
-  { id: "r2", author: "Sarah McLean", rating: 5, comment: "Samsung battery swapped same day. Friendly staff and honest advice.", device: "Samsung Galaxy S22", source: "Google", approved: true, createdAt: "2025-10-12T14:30:00Z" },
-  { id: "r3", author: "David Wilson", rating: 5, comment: "MacBook keyboard replaced for half what Apple quoted. Quality part, 30-day warranty.", device: "MacBook Pro 2019", source: "Google", approved: true, createdAt: "2025-10-10T09:15:00Z" },
-  { id: "r4", author: "Aisha Rahman", rating: 5, comment: "Fixed my GHD straighteners in an hour for £25. Brilliant service!", device: "GHD Platinum+", source: "Walk-in", approved: true, createdAt: "2025-10-08T16:45:00Z" },
-  { id: "r5", author: "New Customer", rating: 5, comment: "Great service, highly recommend!", device: "iPhone 15", source: "online", approved: false, createdAt: new Date().toISOString() },
-];
+// No demo/fallback reviews — the admin only shows REAL data.
 
 function loadFromStorage(): Review[] | null {
   if (typeof window === "undefined") return null;
@@ -129,7 +123,7 @@ export function ReviewsModule() {
         saveToStorage(d.reviews);
       } else {
         const stored = loadFromStorage();
-        setReviews(stored || FALLBACK_REVIEWS);
+        setReviews(stored || []);
       }
     } catch {
       // API unreachable — use localStorage or fallback

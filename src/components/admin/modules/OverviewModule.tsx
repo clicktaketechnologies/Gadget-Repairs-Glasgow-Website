@@ -120,29 +120,13 @@ const KPI_CARDS = [
   },
 ] as const;
 
-// Static fallback data — used when the API is unreachable (Render sleeping/offline)
-const FALLBACK_DATA: Overview = {
-  kpis: { total: 8, pending: 2, inProgress: 2, ready: 1, completed: 3, revenue: 420 },
-  trend: Array.from({ length: 14 }, (_, i) => ({
-    date: new Date(Date.now() - (13 - i) * 86400000).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }),
-    Pending: i % 5 === 0 ? 1 : 0,
-    "In Progress": i % 3 === 0 ? 1 : 0,
-    Ready: i % 4 === 0 ? 1 : 0,
-    Completed: i % 2 === 0 ? 1 : 0,
-  })),
-  deviceTypes: [
-    { name: "Phone", value: 5 },
-    { name: "Laptop", value: 1 },
-    { name: "Tablet", value: 1 },
-    { name: "Console", value: 1 },
-  ],
-  recentBookings: [
-    { id: "1", ticketId: "GD-1024", customerName: "John Smith", email: "john@example.com", deviceType: "Phone", deviceModel: "iPhone 14 Pro", status: "Pending", createdAt: new Date().toISOString() },
-    { id: "2", ticketId: "GD-1025", customerName: "Sarah McLean", email: "sarah@example.com", deviceType: "Phone", deviceModel: "Samsung S22", status: "In Progress", createdAt: new Date(Date.now() - 86400000).toISOString() },
-    { id: "3", ticketId: "GD-1026", customerName: "David Wilson", email: "david@example.com", deviceType: "Laptop", deviceModel: "MacBook Pro", status: "Completed", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
-    { id: "4", ticketId: "GD-1027", customerName: "Aisha Rahman", email: "aisha@example.com", deviceType: "GHD", deviceModel: "GHD Platinum+", status: "Ready", createdAt: new Date(Date.now() - 3 * 86400000).toISOString() },
-    { id: "5", ticketId: "GD-1028", customerName: "James O'Brien", email: "james@example.com", deviceType: "Console", deviceModel: "PlayStation 5", status: "Completed", createdAt: new Date(Date.now() - 4 * 86400000).toISOString() },
-  ],
+// Empty state — no demo/dummy data. When there are no real bookings, the
+// overview shows zeros and "No bookings yet" messages.
+const EMPTY_DATA: Overview = {
+  kpis: { total: 0, pending: 0, inProgress: 0, ready: 0, completed: 0, revenue: 0 },
+  trend: [],
+  deviceTypes: [],
+  recentBookings: [],
 };
 
 export function OverviewModule() {
@@ -217,7 +201,8 @@ export function OverviewModule() {
       })
       .catch(() => {
         if (active && !data) {
-          setData(FALLBACK_DATA);
+          // No API and no localStorage data — show empty state (NOT demo data)
+          setData(EMPTY_DATA);
           setError(null);
         }
       })

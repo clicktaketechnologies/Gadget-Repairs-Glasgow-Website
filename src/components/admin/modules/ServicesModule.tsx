@@ -70,16 +70,8 @@ const EMPTY: Omit<Service, "id"> = {
 
 const STORAGE_KEY = "grg-admin-services";
 
-const FALLBACK_SERVICES: Service[] = [
-  { id: "s1", slug: "mobile-repair", name: "Mobile Repair Service", category: "Mobile Repair", description: "Professional repair for all smartphones.", icon: "Smartphone", priceFrom: "£25", priceTo: "£250", turnaround: "30 min – 2 hours", popular: true, active: true, sortOrder: 1 },
-  { id: "s2", slug: "macbook-repair", name: "MacBook Repair Service", category: "MacBook Repair", description: "Expert MacBook repair.", icon: "Laptop", priceFrom: "£60", priceTo: "£450", turnaround: "1 – 3 days", popular: true, active: true, sortOrder: 2 },
-  { id: "s3", slug: "laptop-repair", name: "Laptop Repair Service", category: "Laptop Repair", description: "Comprehensive laptop repair.", icon: "Laptop", priceFrom: "£40", priceTo: "£300", turnaround: "1 – 2 days", popular: true, active: true, sortOrder: 3 },
-  { id: "s4", slug: "ghd-repair", name: "GHD Repair Service", category: "GHD Repair", description: "GHD hair straightener repair.", icon: "Zap", priceFrom: "£20", priceTo: "£60", turnaround: "1 – 2 hours", popular: false, active: true, sortOrder: 4 },
-  { id: "s5", slug: "tablet-repair", name: "Tablet Repair Service", category: "Tablet Repair", description: "Tablet and iPad repair.", icon: "Tablet", priceFrom: "£40", priceTo: "£220", turnaround: "1 – 3 hours", popular: true, active: true, sortOrder: 5 },
-  { id: "s6", slug: "game-console-repair", name: "Game Console Repair Service", category: "Game Console Repair", description: "Game console repair.", icon: "Gamepad2", priceFrom: "£35", priceTo: "£200", turnaround: "1 – 3 days", popular: false, active: true, sortOrder: 6 },
-  { id: "s7", slug: "computer-repair", name: "Computer Repair Service", category: "Computer Repair", description: "Desktop PC and iMac repair.", icon: "Monitor", priceFrom: "£35", priceTo: "£350", turnaround: "1 – 3 days", popular: false, active: true, sortOrder: 7 },
-  { id: "s8", slug: "smart-watch-repair", name: "Smart Watch Repair Service", category: "Smart Watch Repair", description: "Smart watch repair.", icon: "Watch", priceFrom: "£30", priceTo: "£180", turnaround: "1 – 2 hours", popular: false, active: true, sortOrder: 8 },
-];
+// No demo/fallback services — the admin only shows REAL data from the
+// API or localStorage. Admins can add services manually.
 
 function loadFromStorage(): Service[] | null {
   if (typeof window === "undefined") return null;
@@ -121,7 +113,7 @@ export function ServicesModule() {
         saveToStorage(d.services);
       } else {
         const stored = loadFromStorage();
-        setServices(stored || FALLBACK_SERVICES);
+        setServices(stored || []);
       }
     } catch {
       // API unreachable — use localStorage or fallback

@@ -136,13 +136,8 @@ const PUBLIC_KEY = "grg-public-bookings";
 const TRASH_KEY = "grg-admin-bookings-trash";
 const SENT_EMAILS_KEY = "grg-admin-sent-emails";
 
-const FALLBACK_BOOKINGS: Booking[] = [
-  { id: "b1", ticketId: "GD-1024", customerName: "John Smith", email: "john@example.com", phone: "+44 7700 900100", deviceType: "Phone", deviceModel: "iPhone 14 Pro", issue: "Cracked screen", needsCollection: false, collectionAddr: null, status: "Pending", technicianNotes: null, quotedPrice: "£120", finalPrice: null, source: "online", bookingDate: "2025-10-21", bookingTime: "10:30", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  { id: "b2", ticketId: "GD-1025", customerName: "Sarah McLean", email: "sarah@example.com", phone: "+44 7700 900101", deviceType: "Phone", deviceModel: "Samsung S22", issue: "Battery replacement", needsCollection: false, collectionAddr: null, status: "In Progress", technicianNotes: "Battery ordered", quotedPrice: "£60", finalPrice: null, source: "walk-in", bookingDate: "2025-10-20", bookingTime: "14:00", createdAt: new Date(Date.now() - 86400000).toISOString(), updatedAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: "b3", ticketId: "GD-1026", customerName: "David Wilson", email: "david@example.com", phone: "+44 7700 900102", deviceType: "Laptop", deviceModel: "MacBook Pro 2019", issue: "Keyboard failure", needsCollection: false, collectionAddr: null, status: "Completed", technicianNotes: "Replaced top case", quotedPrice: "£180", finalPrice: "£180", source: "online", bookingDate: "2025-10-19", bookingTime: "11:00", createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 2 * 86400000).toISOString() },
-  { id: "b4", ticketId: "GD-1027", customerName: "Aisha Rahman", email: "aisha@example.com", phone: "+44 7700 900103", deviceType: "GHD", deviceModel: "GHD Platinum+", issue: "Won't heat", needsCollection: false, collectionAddr: null, status: "Ready", technicianNotes: "Thermal fuse replaced", quotedPrice: "£25", finalPrice: "£25", source: "walk-in", bookingDate: "2025-10-18", bookingTime: "15:00", createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 3 * 86400000).toISOString() },
-  { id: "b5", ticketId: "GD-1028", customerName: "James O'Brien", email: "james@example.com", phone: "+44 7700 900104", deviceType: "Console", deviceModel: "PlayStation 5", issue: "HDMI port broken", needsCollection: false, collectionAddr: null, status: "Completed", technicianNotes: "HDMI port resoldered", quotedPrice: "£100", finalPrice: "£100", source: "online", bookingDate: "2025-10-17", bookingTime: "09:30", createdAt: new Date(Date.now() - 4 * 86400000).toISOString(), updatedAt: new Date(Date.now() - 4 * 86400000).toISOString() },
-];
+// No demo/fallback bookings — the admin only shows REAL data from the API
+// or localStorage. When there are no bookings, an empty state is shown.
 
 // Demo/fallback booking IDs that should never be treated as real data.
 const DEMO_IDS = new Set(["b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8"]);
@@ -286,12 +281,12 @@ export function BookingsModule() {
         // API returned empty — use localStorage (public bookings submitted
         // via the form) or the in-memory fallback (never persisted).
         const stored = loadFromStorage();
-        setBookings(stored || FALLBACK_BOOKINGS);
+        setBookings(stored || []);
       }
     } catch {
-      // API unreachable — use localStorage or fallback
+      // API unreachable — use localStorage or empty
       const stored = loadFromStorage();
-      setBookings(stored || FALLBACK_BOOKINGS);
+      setBookings(stored || []);
     } finally {
       setLoading(false);
     }
