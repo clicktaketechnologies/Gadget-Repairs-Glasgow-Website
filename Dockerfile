@@ -34,8 +34,11 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.env ./.env
 
 EXPOSE 3000
 
-# Push schema to DB then start server
+# Push schema to DB then start server.
+# DATABASE_URL can come from the .env file (copied above) or from a Render
+# environment variable (which takes precedence).
 CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node server.js"]
