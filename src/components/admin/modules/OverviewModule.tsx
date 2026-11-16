@@ -136,6 +136,7 @@ export function OverviewModule() {
 
   useEffect(() => {
     let active = true;
+    let hasLocalData = false;
 
     // First: try to build overview from localStorage bookings
     try {
@@ -179,6 +180,7 @@ export function OverviewModule() {
           deviceTypes,
           recentBookings: allBookings.slice(0, 6),
         };
+        hasLocalData = true;
         if (active) {
           Promise.resolve().then(() => {
             if (active) {
@@ -191,7 +193,7 @@ export function OverviewModule() {
       }
     } catch {}
 
-    // Then: try the API for live data
+    // Then: try the API for live data (overrides localStorage if available)
     adminJson<Overview>("/api/admin/overview")
       .then((d) => {
         if (active) {
@@ -200,8 +202,9 @@ export function OverviewModule() {
         }
       })
       .catch(() => {
-        if (active && !data) {
-          // No API and no localStorage data — show empty state (NOT demo data)
+        // API unreachable — keep localStorage data if we have it,
+        // otherwise show empty state (NOT demo data)
+        if (active && !hasLocalData) {
           setData(EMPTY_DATA);
           setError(null);
         }
