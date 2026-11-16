@@ -22,6 +22,7 @@ import { Section } from "@/components/site/Section";
 import { useNav } from "@/store/nav";
 import { telDigits, fmtDateTime } from "../lib";
 import { cn } from "@/lib/utils";
+import { supabaseFetchByTicket, isSupabaseConfigured } from "@/lib/supabase-client";
 
 const EXAMPLE_TICKETS = ["GD-1024", "GD-2317", "GD-4501", "GD-6892"];
 
@@ -83,7 +84,18 @@ export function TrackPage() {
     setBooking(null);
     setNotFound(false);
 
-    // First: check localStorage for locally-created bookings.
+    // First: try Supabase (shared cloud database — works across all devices)
+    if (isSupabaseConfigured()) {
+      const supaBooking = await supabaseFetchByTicket(tid);
+      if (supaBooking) {
+        setBooking(supaBooking as unknown as Booking);
+        toast.success("Booking found!");
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Second: check localStorage for locally-created bookings.
     // Public bookings (submitted via the website form) live in grg-public-bookings,
     // admin-created bookings live in grg-admin-bookings — check both.
     try {

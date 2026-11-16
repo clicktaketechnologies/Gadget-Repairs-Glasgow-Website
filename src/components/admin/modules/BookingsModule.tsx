@@ -60,6 +60,13 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { adminJson } from "@/lib/admin-fetch";
 import { fmtDateTime } from "@/lib/utils2";
 import {
+  supabaseFetchBookings,
+  supabaseUpdateBooking,
+  supabaseDeleteBooking,
+  isSupabaseConfigured,
+  type SupabaseBooking,
+} from "@/lib/supabase-client";
+import {
   Search,
   Download,
   Eye,
@@ -257,6 +264,39 @@ export function BookingsModule() {
 
   const load = useCallback(async () => {
     setLoading(true);
+
+    // STEP 1: Try Supabase first (shared cloud database — all devices see same data)
+    if (isSupabaseConfigured()) {
+      const supaBookings = await supabaseFetchBookings();
+      if (supaBookings.length > 0) {
+        const mapped: Booking[] = supaBookings.map((b: SupabaseBooking) => ({
+          id: b.id || `supa-${b.ticketId}`,
+          ticketId: b.ticketId,
+          customerName: b.customerName,
+          email: b.email,
+          phone: b.phone,
+          deviceType: b.deviceType,
+          deviceModel: b.deviceModel,
+          issue: b.issue,
+          needsCollection: b.needsCollection,
+          collectionAddr: b.collectionAddr,
+          status: b.status,
+          technicianNotes: b.technicianNotes,
+          quotedPrice: b.quotedPrice,
+          finalPrice: b.finalPrice,
+          source: b.source,
+          bookingDate: b.bookingDate,
+          bookingTime: b.bookingTime,
+          createdAt: b.createdAt || new Date().toISOString(),
+          updatedAt: b.updatedAt,
+        }));
+        setBookings(mapped);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // STEP 2: Try the Render backend API
     try {
       const params = new URLSearchParams();
       if (q) params.set("q", q);
@@ -265,9 +305,6 @@ export function BookingsModule() {
         `/api/admin/bookings?${params.toString()}`
       );
       if (data.bookings && data.bookings.length > 0) {
-        // API returned real data — use it as the source of truth, but also
-        // merge in any public bookings from localStorage that the API might
-        // not have yet (e.g. just submitted and not yet synced).
         const apiIds = new Set(data.bookings.map((b) => b.id));
         const stored = loadFromStorage();
         const localOnly = stored
@@ -275,16 +312,13 @@ export function BookingsModule() {
           : [];
         const merged = [...localOnly, ...data.bookings];
         setBookings(merged);
-        // Cache the merged data locally (for offline access)
         saveToStorage(merged);
       } else {
-        // API returned empty — use localStorage (public bookings submitted
-        // via the form) or the in-memory fallback (never persisted).
         const stored = loadFromStorage();
         setBookings(stored || []);
       }
     } catch {
-      // API unreachable — use localStorage or empty
+      // STEP 3: API unreachable — use localStorage or empty
       const stored = loadFromStorage();
       setBookings(stored || []);
     } finally {
@@ -367,6 +401,10 @@ export function BookingsModule() {
       saveToStorage(next);
       return next;
     });
+    // Update Supabase first (so all devices see the change)
+    if (isSupabaseConfigured() && !b.id.startsWith("pub-") && !b.id.startsWith("supa-")) {
+      await supabaseUpdateBooking(b.id, { status });
+    }
     try {
       await adminJson(`/api/admin/bookings/${b.id}`, {
         method: "PATCH",

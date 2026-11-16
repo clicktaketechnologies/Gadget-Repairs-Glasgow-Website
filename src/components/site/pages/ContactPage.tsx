@@ -24,6 +24,7 @@ import { Section } from "@/components/site/Section";
 import { STATIC_BRANDING, STATIC_SERVICES } from "../staticData";
 import { useNav } from "@/store/nav";
 import { parseJson, telDigits, type HoursEntry } from "../lib";
+import { supabaseInsertBooking, isSupabaseConfigured } from "@/lib/supabase-client";
 
 export function ContactPage() {
   const branding = useNav((s) => s.branding);
@@ -74,30 +75,52 @@ export function ContactPage() {
     }
     setSubmitting(true);
 
-    // STEP 1: ALWAYS save to localStorage first — this is the source of truth
-    // for the offline-first architecture. The booking is guaranteed to be stored
-    // here regardless of whether the backend API is available.
     const ticketNum = String(1024 + Math.floor(Math.random() * 8000)).padStart(4, "0");
     const newTicketId = `GD-${ticketNum}`;
-    const booking = {
-      id: `pub-${Date.now()}`,
+    const bookingData = {
       ticketId: newTicketId,
-      ...form,
+      customerName: form.customerName,
+      email: form.email,
+      phone: form.phone,
+      deviceType: form.deviceType,
+      deviceModel: form.deviceModel,
+      issue: form.issue,
+      needsCollection: form.needsCollection,
+      collectionAddr: form.collectionAddr || null,
       status: "Pending",
       source: "online",
+      bookingDate: form.bookingDate || null,
+      bookingTime: form.bookingTime || "10:30",
+    };
+
+    // STEP 1: Try to save directly to Supabase (shared cloud database).
+    // If this succeeds, ALL devices (admin, customer, other phones) can see it.
+    if (isSupabaseConfigured()) {
+      const inserted = await supabaseInsertBooking(bookingData);
+      if (inserted) {
+        setTicketId(inserted.ticketId || newTicketId);
+        toast.success(`Booking received! Your ticket ID is ${inserted.ticketId || newTicketId}`);
+        setSubmitting(false);
+        return;
+      }
+      // If Supabase insert failed, fall through to localStorage fallback
+    }
+
+    // STEP 2: Fallback — save to localStorage (per-browser only)
+    const booking = {
+      id: `pub-${Date.now()}`,
+      ...bookingData,
       createdAt: new Date().toISOString(),
     };
     try {
       const existing = JSON.parse(localStorage.getItem("grg-public-bookings") || "[]");
-      // Dedupe by ticketId to avoid accidental double-saves
       if (!existing.some((b: any) => b.ticketId === newTicketId)) {
         existing.unshift(booking);
       }
       localStorage.setItem("grg-public-bookings", JSON.stringify(existing));
     } catch {}
 
-    // STEP 2: Best-effort sync to the backend API. If it fails, the booking is
-    // already safely in localStorage (above) so the customer is never affected.
+    // STEP 3: Also try the backend API (Render) as a secondary sync
     try {
       const res = await fetch("/api/public/bookings", {
         method: "POST",
@@ -108,25 +131,13 @@ export function ContactPage() {
       if (contentType.includes("application/json")) {
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.booking?.ticketId) {
-          // API succeeded — update the local booking with the server ticket id
-          // so Track Repair can find it under either id.
-          try {
-            const stored = JSON.parse(localStorage.getItem("grg-public-bookings") || "[]");
-            const idx = stored.findIndex((b: any) => b.ticketId === newTicketId);
-            if (idx >= 0) {
-              stored[idx] = { ...stored[idx], ...data.booking };
-              localStorage.setItem("grg-public-bookings", JSON.stringify(stored));
-            }
-          } catch {}
           setTicketId(data.booking.ticketId);
           toast.success(`Booking received! Your ticket ID is ${data.booking.ticketId}`);
+          setSubmitting(false);
           return;
         }
       }
-      // Non-JSON or failed response — fall through to local ticket confirmation
-    } catch {
-      // Network error — booking already saved locally above
-    }
+    } catch {}
 
     setTicketId(newTicketId);
     toast.success(`Booking received! Your ticket ID is ${newTicketId}`);
