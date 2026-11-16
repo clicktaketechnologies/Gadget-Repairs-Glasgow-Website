@@ -1,6 +1,9 @@
 // Supabase client for browser-side database access.
-// Uses the public anon key (safe to embed in client-side JS).
+// Uses the public publishable key (safe to embed in client-side JS).
 // All devices read/write the same Supabase PostgreSQL database → same data everywhere.
+//
+// NOTE: The Supabase table uses lowercase column names (PostgreSQL default).
+// This module converts between camelCase (TypeScript) and lowercase (Supabase).
 
 const SUPABASE_URL = "https://xovzzstcuonrrvklwlpy.supabase.co";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -27,31 +30,44 @@ export interface SupabaseBooking {
   updatedAt?: string;
 }
 
-/**
- * Check if Supabase is configured (anon key is set).
- */
+// Convert camelCase to lowercase (for Supabase columns)
+function toSupa(obj: Record<string, any>): Record<string, any> {
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    out[k.toLowerCase()] = v;
+  }
+  return out;
+}
+
+// Convert lowercase Supabase row to camelCase
+function fromSupa(row: Record<string, any>): SupabaseBooking {
+  return {
+    id: row.id,
+    ticketId: row.ticketid || row.ticketId || "",
+    customerName: row.customername || row.customerName || "",
+    email: row.email || "",
+    phone: row.phone || "",
+    deviceType: row.devicetype || row.deviceType || "",
+    deviceModel: row.devicemodel || row.deviceModel || "",
+    issue: row.issue || "",
+    needsCollection: row.needscollection ?? row.needsCollection ?? false,
+    collectionAddr: row.collectionaddr ?? row.collectionAddr ?? null,
+    status: row.status || "Pending",
+    technicianNotes: row.techniciannotes ?? row.technicianNotes ?? null,
+    quotedPrice: row.quotedprice ?? row.quotedPrice ?? null,
+    finalPrice: row.finalprice ?? row.finalPrice ?? null,
+    source: row.source || "online",
+    bookingDate: row.bookingdate ?? row.bookingDate ?? null,
+    bookingTime: row.bookingtime ?? row.bookingTime ?? null,
+    createdAt: row.createdat || row.createdAt,
+    updatedAt: row.updatedat || row.updatedAt,
+  };
+}
+
 export function isSupabaseConfigured(): boolean {
   return !!SUPABASE_ANON_KEY;
 }
 
-/**
- * Get the Supabase REST API base URL.
- */
-export function supabaseUrl(): string {
-  return SUPABASE_URL;
-}
-
-/**
- * Get the anon key (for debugging only).
- */
-export function supabaseKey(): string {
-  return SUPABASE_ANON_KEY;
-}
-
-/**
- * Insert a booking into Supabase via the REST API.
- * Returns the inserted booking or throws on error.
- */
 export async function supabaseInsertBooking(
   booking: Omit<SupabaseBooking, "id" | "createdAt" | "updatedAt">
 ): Promise<SupabaseBooking | null> {
@@ -65,25 +81,22 @@ export async function supabaseInsertBooking(
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         Prefer: "return=representation",
       },
-      body: JSON.stringify(booking),
+      body: JSON.stringify(toSupa(booking)),
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return Array.isArray(data) ? data[0] : data;
+    const row = Array.isArray(data) ? data[0] : data;
+    return fromSupa(row);
   } catch {
     return null;
   }
 }
 
-/**
- * Fetch all bookings from Supabase via the REST API.
- * Ordered by createdAt descending.
- */
 export async function supabaseFetchBookings(): Promise<SupabaseBooking[]> {
   if (!SUPABASE_ANON_KEY) return [];
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/bookings?order=createdAt.desc&limit=200`,
+      `${SUPABASE_URL}/rest/v1/bookings?order=createdat.desc&limit=200`,
       {
         headers: {
           apikey: SUPABASE_ANON_KEY,
@@ -93,22 +106,20 @@ export async function supabaseFetchBookings(): Promise<SupabaseBooking[]> {
     );
     if (!res.ok) return [];
     const data = await res.json();
-    return Array.isArray(data) ? data : [];
+    return Array.isArray(data) ? data.map(fromSupa) : [];
   } catch {
     return [];
   }
 }
 
-/**
- * Update a booking in Supabase by ID.
- */
 export async function supabaseUpdateBooking(
   id: string,
   updates: Partial<SupabaseBooking>
 ): Promise<boolean> {
   if (!SUPABASE_ANON_KEY) return false;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/bookings?id=eq.${id}`, {
+    const body = { ...toSupa(updates), updatedat: new Date().toISOString() };
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(id)}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -116,7 +127,7 @@ export async function supabaseUpdateBooking(
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         Prefer: "return=minimal",
       },
-      body: JSON.stringify({ ...updates, updatedAt: new Date().toISOString() }),
+      body: JSON.stringify(body),
     });
     return res.ok;
   } catch {
@@ -124,13 +135,10 @@ export async function supabaseUpdateBooking(
   }
 }
 
-/**
- * Delete a booking from Supabase by ID.
- */
 export async function supabaseDeleteBooking(id: string): Promise<boolean> {
   if (!SUPABASE_ANON_KEY) return false;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/bookings?id=eq.${id}`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: {
         apikey: SUPABASE_ANON_KEY,
@@ -143,16 +151,13 @@ export async function supabaseDeleteBooking(id: string): Promise<boolean> {
   }
 }
 
-/**
- * Fetch a single booking by ticket ID (for the Track Repair page).
- */
 export async function supabaseFetchByTicket(
   ticketId: string
 ): Promise<SupabaseBooking | null> {
   if (!SUPABASE_ANON_KEY) return null;
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/bookings?ticketId=eq.${encodeURIComponent(
+      `${SUPABASE_URL}/rest/v1/bookings?ticketid=eq.${encodeURIComponent(
         ticketId.toUpperCase()
       )}&limit=1`,
       {
@@ -164,7 +169,7 @@ export async function supabaseFetchByTicket(
     );
     if (!res.ok) return null;
     const data = await res.json();
-    return Array.isArray(data) && data.length > 0 ? data[0] : null;
+    return Array.isArray(data) && data.length > 0 ? fromSupa(data[0]) : null;
   } catch {
     return null;
   }
