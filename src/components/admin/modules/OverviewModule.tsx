@@ -20,6 +20,7 @@ import {
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { adminJson } from "@/lib/admin-fetch";
 import { fmtDateTime } from "@/lib/utils2";
+import { supabaseFetchBookings, isSupabaseConfigured } from "@/lib/supabase-client";
 import {
   AreaChart,
   Area,
@@ -138,48 +139,66 @@ export function OverviewModule() {
     let active = true;
     let hasLocalData = false;
 
-    // First: try to build overview from localStorage bookings
+    // Helper: build Overview data from a bookings array
+    function buildOverview(allBookings: any[]): Overview {
+      const pending = allBookings.filter((b) => b.status === "Pending").length;
+      const inProgress = allBookings.filter((b) => b.status === "In Progress").length;
+      const ready = allBookings.filter((b) => b.status === "Ready").length;
+      const completed = allBookings.filter((b) => b.status === "Completed").length;
+      let revenue = 0;
+      for (const b of allBookings) {
+        const m = (b.finalPrice || "").match(/£?([\d.]+)/);
+        if (m) revenue += parseFloat(m[1]);
+      }
+      const deviceMap: Record<string, number> = {};
+      for (const b of allBookings) deviceMap[b.deviceType] = (deviceMap[b.deviceType] || 0) + 1;
+      const deviceTypes = Object.entries(deviceMap).map(([name, value]) => ({ name, value }));
+
+      const trend = Array.from({ length: 14 }, (_, i) => {
+        const day = new Date(Date.now() - (13 - i) * 86400000);
+        const dayStr = day.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+        const dayBookings = allBookings.filter((b) => {
+          const bDate = new Date(b.createdAt);
+          return bDate.toDateString() === day.toDateString();
+        });
+        return {
+          date: dayStr,
+          Pending: dayBookings.filter((b) => b.status === "Pending").length,
+          "In Progress": dayBookings.filter((b) => b.status === "In Progress").length,
+          Ready: dayBookings.filter((b) => b.status === "Ready").length,
+          Completed: dayBookings.filter((b) => b.status === "Completed").length,
+        };
+      });
+
+      return {
+        kpis: { total: allBookings.length, pending, inProgress, ready, completed, revenue: Math.round(revenue) },
+        trend,
+        deviceTypes,
+        recentBookings: allBookings.slice(0, 6),
+      };
+    }
+
+    // STEP 1: Try Supabase first (shared cloud database — works on all devices)
+    if (isSupabaseConfigured()) {
+      supabaseFetchBookings().then((supaBookings) => {
+        if (active && supaBookings.length > 0) {
+          const overview = buildOverview(supaBookings);
+          hasLocalData = true;
+          setData(overview);
+          setError(null);
+          setLoading(false);
+        }
+      }).catch(() => {});
+    }
+
+    // STEP 2: Fallback — try localStorage (for offline or if Supabase fails)
     try {
       const adminBookings = JSON.parse(localStorage.getItem("grg-admin-bookings") || "[]");
       const publicBookings = JSON.parse(localStorage.getItem("grg-public-bookings") || "[]");
       const allBookings = [...publicBookings, ...adminBookings];
 
-      if (allBookings.length > 0) {
-        const pending = allBookings.filter((b: any) => b.status === "Pending").length;
-        const inProgress = allBookings.filter((b: any) => b.status === "In Progress").length;
-        const ready = allBookings.filter((b: any) => b.status === "Ready").length;
-        const completed = allBookings.filter((b: any) => b.status === "Completed").length;
-        let revenue = 0;
-        for (const b of allBookings) {
-          const m = (b.finalPrice || "").match(/£?([\d.]+)/);
-          if (m) revenue += parseFloat(m[1]);
-        }
-        const deviceMap: Record<string, number> = {};
-        for (const b of allBookings) deviceMap[b.deviceType] = (deviceMap[b.deviceType] || 0) + 1;
-        const deviceTypes = Object.entries(deviceMap).map(([name, value]) => ({ name, value }));
-
-        const trend = Array.from({ length: 14 }, (_, i) => {
-          const day = new Date(Date.now() - (13 - i) * 86400000);
-          const dayStr = day.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
-          const dayBookings = allBookings.filter((b: any) => {
-            const bDate = new Date(b.createdAt);
-            return bDate.toDateString() === day.toDateString();
-          });
-          return {
-            date: dayStr,
-            Pending: dayBookings.filter((b: any) => b.status === "Pending").length,
-            "In Progress": dayBookings.filter((b: any) => b.status === "In Progress").length,
-            Ready: dayBookings.filter((b: any) => b.status === "Ready").length,
-            Completed: dayBookings.filter((b: any) => b.status === "Completed").length,
-          };
-        });
-
-        const localData: Overview = {
-          kpis: { total: allBookings.length, pending, inProgress, ready, completed, revenue: Math.round(revenue) },
-          trend,
-          deviceTypes,
-          recentBookings: allBookings.slice(0, 6),
-        };
+      if (allBookings.length > 0 && !hasLocalData) {
+        const localData = buildOverview(allBookings);
         hasLocalData = true;
         if (active) {
           Promise.resolve().then(() => {
